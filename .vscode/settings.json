@@ -1,0 +1,11 @@
+{
+    "cmake.configureOnOpen": false,
+    "cSpell.words": [
+        "Cyclocomputer",
+        "libbluetooth"
+    ],
+    "files.associations": {
+        "iosfwd": "cpp",
+        "ostream": "cpp"
+    }
+}
