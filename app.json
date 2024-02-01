@@ -2,7 +2,6 @@
   "expo": {
     "name": "Bike Tour Assistant",
     "slug": "bike-tour-assistant",
-    "entryPoint": "./src/App",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
@@ -24,12 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#455a64"
       },
-      "permissions": [
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.ACCESS_BACKGROUND_LOCATION"
-      ],
+      "permissions": [],
       "package": "com.bike_tour_assistant"
     },
     "web": {
@@ -42,17 +36,8 @@
     },
     "owner": "aktyn",
     "plugins": [
-      [
-        "@config-plugins/react-native-ble-plx",
-        {
-          "isBackgroundEnabled": true,
-          "modes": [
-            "peripheral",
-            "central"
-          ],
-          "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
-        }
-      ]
+      "react-native-ble-plx",
+      "expo-font"
     ]
   }
 }

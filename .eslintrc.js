@@ -61,6 +61,7 @@ module.exports = {
     '@typescript-eslint/no-empty-interface': ['off'],
     '@typescript-eslint/explicit-module-boundary-types': 0,
     '@typescript-eslint/explicit-function-return-type': 0,
+    '@typescript-eslint/no-unsafe-declaration-merging': 0,
     '@typescript-eslint/no-unused-vars': [
       'error',
       {
@@ -127,7 +128,7 @@ module.exports = {
     'no-console': [
       'warn',
       {
-        allow: ['warn', 'error'],
+        allow: ['warn', 'error', 'info'],
       },
     ],
     'react-native/no-inline-styles': 'off',

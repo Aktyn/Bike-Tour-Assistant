@@ -1,32 +1,44 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { registerRootComponent } from 'expo'
 import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, Text, View } from 'react-native'
-import { Bluetooth } from './core/bluetooth'
+import { StyleSheet, View } from 'react-native'
+import { CoreContext } from './context/coreContext'
+import { Core } from './core/core'
+import { DeviceConnection } from './views/DeviceConnection'
 
 export default function App() {
+  const [core, setCore] = useState<Core | null>(null)
+
   useEffect(() => {
-    const bluetooth = new Bluetooth()
-    bluetooth.init().catch(console.error)
+    const coreInstance = new Core()
+    coreInstance.bluetooth.init().catch(console.error)
+
+    setCore(coreInstance)
 
     return () => {
-      bluetooth.destroy()
+      coreInstance.destroy()
     }
   }, [])
 
+  if (!core) {
+    return null
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!!!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <CoreContext.Provider value={core}>
+      <View style={styles.container}>
+        <StatusBar style="auto" />
+        <DeviceConnection />
+      </View>
+    </CoreContext.Provider>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: '#006064',
+    alignItems: 'stretch',
     justifyContent: 'center',
   },
 })
