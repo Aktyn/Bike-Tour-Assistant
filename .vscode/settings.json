@@ -5,7 +5,8 @@
         "libbluetooth"
     ],
     "files.associations": {
-        "iosfwd": "cpp",
-        "ostream": "cpp"
+        "iosfwd": "c",
+        "ostream": "c",
+        "btlib.h": "c"
     }
 }

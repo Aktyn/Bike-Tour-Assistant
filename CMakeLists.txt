@@ -1,10 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(BikeTourAssistant VERSION 0.1.0 LANGUAGES C CXX)
+project(BikeTourAssistant VERSION 0.1.0 LANGUAGES CXX)
 
-include(CTest)
-enable_testing()
-
-add_executable(BikeTourAssistant main.cpp)
+add_executable(BikeTourAssistant main.c btferret/btlib.c)
 
 target_link_libraries(BikeTourAssistant bluetooth)
 

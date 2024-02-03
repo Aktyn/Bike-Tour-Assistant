@@ -1,0 +1,14 @@
+DEVICE=BikeTourAssistant  TYPE=MESH  NODE=1  ADDRESS=B8:27:EB:57:CC:EE
+  ; LE characteristics when acting as an LE server
+  ; Specify UUIDs and let system allocate handles  
+  PRIMARY_SERVICE = 1800
+    LECHAR = Device Name  PERMIT=02 SIZE=16 UUID=2A00   ; index 0 
+    LECHAR = Appearance   PERMIT=02 SIZE=2  UUID=2A01   ; index 1 
+  PRIMARY_SERVICE = 1801
+    LECHAR = Service changed PERMIT=20 SIZE=4 UUID=2A05 ; index 2  
+  PRIMARY_SERVICE = 180A
+    LECHAR = PnP ID          PERMIT=02 SIZE=7 UUID=2A50 ; index 3 
+  PRIMARY_SERVICE = 112233445566778899AABBCCDDEEFF00 
+    LECHAR = Control  PERMIT=06 SIZE=2 UUID=ABCD        ; index 4
+    LECHAR = Info     PERMIT=06 SIZE=1 UUID=CDEF        ; index 5
+    LECHAR = Data     PERMIT=12 SIZE=1 UUID=DEAF        ; index 6 notify capable
