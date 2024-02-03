@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { registerRootComponent } from 'expo'
 import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, View } from 'react-native'
+import { blueGrey } from 'material-ui-colors'
+import { StyleSheet, useColorScheme } from 'react-native'
+import { PaperProvider } from 'react-native-paper'
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import { CoreContext } from './context/coreContext'
 import { Core } from './core/core'
-import { DeviceConnection } from './views/DeviceConnection'
+import { darkTheme } from './themes/darkTheme'
+import { ViewRouter } from './views/ViewRouter'
 
 export default function App() {
+  const colorScheme = useColorScheme() as 'light' | 'dark'
+
   const [core, setCore] = useState<Core | null>(null)
 
   useEffect(() => {
     const coreInstance = new Core()
-    coreInstance.bluetooth.init().catch(console.error)
-
     setCore(coreInstance)
 
     return () => {
@@ -26,10 +30,14 @@ export default function App() {
 
   return (
     <CoreContext.Provider value={core}>
-      <View style={styles.container}>
-        <StatusBar style="auto" />
-        <DeviceConnection />
-      </View>
+      <PaperProvider theme={darkTheme}>
+        <SafeAreaProvider>
+          <SafeAreaView style={styles.container}>
+            <ViewRouter />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          </SafeAreaView>
+        </SafeAreaProvider>
+      </PaperProvider>
     </CoreContext.Provider>
   )
 }
@@ -37,9 +45,9 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#006064',
+    backgroundColor: blueGrey[700],
     alignItems: 'stretch',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
 })
 

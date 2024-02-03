@@ -12,13 +12,14 @@ type EmitterBase<EventName extends string> = {
   ) => EmitterBase<EventName>
 }
 
+//TODO better typing
 export function useCoreEvent<
   EventNameType extends string,
   EmitterType extends EmitterBase<EventNameType>,
 >(
   emitter: EmitterType,
   event: EventNameType,
-  listener: ExtractListenerType<EventNameType, EmitterType>,
+  listener: Parameters<EmitterType['on']>[1],
   deps: DependencyList = [],
 ) {
   useEffect(() => {
@@ -33,12 +34,3 @@ export function useCoreEvent<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
-
-type ExtractListenerType<
-  E extends string,
-  T extends EmitterBase<E>,
-> = T extends {
-  on(event: E, listener: infer L): T
-}
-  ? L
-  : never
