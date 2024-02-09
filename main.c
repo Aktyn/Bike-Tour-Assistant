@@ -1,91 +1,90 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "btferret/btlib.h"
-
-int le_callback(int clientnode, int operation, int cticn);
+#include "DEV_Config.h"
+#include "LCD_2inch4.h"
+#include "GUI_Paint.h"
+#include "GUI_BMP.h"
+#include <stdio.h>  //printf()
+#include <stdlib.h> //exit()
+#include <signal.h> //signal()
 
 int main()
 {
-  int index;
-  unsigned char buf[32], uuid[2];
+#if USE_DEV_LIB
+  printf("Using dev lib\r\n");
+#endif
 
-  if (init_blue("../devices.txt") == 0)
-    return (0);
-  // write 56 to Info (index 5 in devices.txt)
-  // or find index from UUID
-  uuid[0] = 0xCD;
-  uuid[1] = 0xEF;
-  index = find_ctic_index(localnode(), UUID_2, uuid); // should be 5
+  printf("Hello, World!\n");
 
-  buf[0] = 0x56;
-  write_ctic(localnode(), 5, buf, 0); // local device is allowed to write to its own
-                                      // characteristic Info
-                                      // Size is known from devices.txt, so last
-                                      // parameter (count) can be 0
+  LCD_2IN4_test();
 
-  // write 12 34 to Control (index 4)
-  buf[0] = 0x12;
-  buf[1] = 0x34;
-  write_ctic(localnode(), 4, buf, 0);
-
-  keys_to_callback(KEY_ON, 0); // OPTIONAL - key presses are sent to le_callback
-                               // with operation=LE_KEYPRESS and cticn=key code
-                               // The key that stops the server changes from x to ESC
-  le_server(le_callback, 100);
-  // Become an LE server and wait for clients to connect.
-  // when a client performs an operation such as connect, or
-  // write a characteristic, call the function le_callback()
-  // Call LE_TIMER in le_callback every 100 deci-seconds (10 seconds)
-  close_all();
-  return (0);
+  return 0;
 }
 
-int le_callback(int clientnode, int operation, int cticn)
+void LCD_2IN4_test(void)
 {
-  unsigned char buf[32];
+  // Exception handling:ctrl + c
+  signal(SIGINT, Handler_2IN4_LCD);
 
-  if (operation == LE_CONNECT)
+  /* Module Init */
+  if (DEV_ModuleInit() != 0)
   {
-    // clientnode has just connected
-    printf("Client %d has connected\n", clientnode);
-  }
-  else if (operation == LE_READ)
-  {
-    // clientnode has just read local characteristic cticn
-    printf("Client %d has read characteristic %d\n", clientnode, cticn);
-  }
-  else if (operation == LE_WRITE)
-  {
-    // clientnode has just written local characteristic cticn
-    read_ctic(localnode(), cticn, buf, sizeof(buf)); // read characteristic to buf
-    printf("Client %d has written characteristic %d with data %d\n", clientnode, cticn, buf[0]);
-  }
-  else if (operation == LE_DISCONNECT)
-  {
-    // clientnode has just disconnected
-    // uncomment next line to stop LE server when client disconnects
-    // return(SERVER_EXIT);
-    // otherwise LE server will continue and wait for another connection
-    // or operation from other clients that are still connected
-    printf("Client %d has disconnected\n", clientnode);
-  }
-  else if (operation == LE_TIMER)
-  {
-    // The server timer calls here every timerds deci-seconds
-    // Data (index 6) is notify capable
-    // so if the client has enabled notifications for this characteristic
-    // the following write will send the data as a notification to the client
-    buf[0] = 0x67;
-    write_ctic(localnode(), 6, buf, 0);
-  }
-  else if (operation == LE_KEYPRESS)
-  {
-    // Only active if keys_to_callback(KEY_ON,0) has been called before le_server()
-    // cticn = key code
-    //       = ASCII code of key (e.g. a=97)  OR
-    //         btferret custom code for other keys such as Enter, Home,
-    //         PgUp. Full list in keys_to_callback() section
+    DEV_ModuleExit();
+    exit(0);
   }
 
-  return (SERVER_CONTINUE);
+  /* LCD Init */
+  printf("2inch4 LCD demo...\r\n");
+  LCD_2IN4_Init();
+  LCD_2IN4_Clear(WHITE);
+  LCD_SetBacklight(1023);
+
+  UDOUBLE Imagesize = LCD_2IN4_HEIGHT * LCD_2IN4_WIDTH * 2;
+  UWORD *BlackImage;
+  if ((BlackImage = (UWORD *)malloc(Imagesize)) == NULL)
+  {
+    printf("Failed to apply for black memory...\r\n");
+    exit(0);
+  }
+
+  // /*1.Create a new image cache named IMAGE_RGB and fill it with white*/
+  Paint_NewImage(BlackImage, LCD_2IN4_WIDTH, LCD_2IN4_HEIGHT, 0, WHITE, 16);
+  Paint_Clear(WHITE);
+  Paint_SetRotate(ROTATE_0);
+  // /* GUI */
+  printf("drawing...\r\n");
+  // /*2.Drawing on the image*/
+  Paint_DrawPoint(5, 10, BLACK, DOT_PIXEL_1X1, DOT_STYLE_DFT);
+  Paint_DrawPoint(5, 25, BLACK, DOT_PIXEL_2X2, DOT_STYLE_DFT);
+  Paint_DrawPoint(5, 40, BLACK, DOT_PIXEL_3X3, DOT_STYLE_DFT);
+  Paint_DrawPoint(5, 55, BLACK, DOT_PIXEL_4X4, DOT_STYLE_DFT);
+
+  Paint_DrawLine(20, 10, 70, 60, RED, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+  Paint_DrawLine(70, 10, 20, 60, RED, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+  Paint_DrawLine(170, 15, 170, 55, RED, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
+  Paint_DrawLine(150, 35, 190, 35, RED, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
+
+  Paint_DrawRectangle(20, 10, 70, 60, BLUE, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+  Paint_DrawRectangle(85, 10, 130, 60, BLUE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+  Paint_DrawCircle(170, 35, 20, GREEN, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+  Paint_DrawCircle(170, 85, 20, GREEN, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+  Paint_DrawString_EN(5, 70, "hello world", &Font16, WHITE, BLACK);
+  Paint_DrawString_EN(5, 90, "waveshare", &Font20, RED, IMAGE_BACKGROUND);
+
+  Paint_DrawNum(5, 160, 123456789, &Font20, GREEN, IMAGE_BACKGROUND);
+  Paint_DrawString_CN(5, 200, "微雪电子", &Font24CN, IMAGE_BACKGROUND, BLUE);
+  // /*3.Refresh the picture in RAM to LCD*/
+  LCD_2IN4_Display((UBYTE *)BlackImage);
+  DEV_Delay_ms(3000);
+  // /* show bmp */
+  printf("show bmp\r\n");
+
+  GUI_ReadBmp("./pic/LCD_2inch4.bmp");
+  LCD_2IN4_Display((UBYTE *)BlackImage);
+  DEV_Delay_ms(3000);
+
+  /* Module Exit */
+  free(BlackImage);
+  BlackImage = NULL;
+  DEV_ModuleExit();
 }

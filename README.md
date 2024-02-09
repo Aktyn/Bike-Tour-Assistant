@@ -10,11 +10,20 @@ Separate branch contains Android project for phone control and GPS signal source
 ---
 
 ### Prerequisites: 
+- ##### Bluetooth
 ```
 sudo apt install build-essential
 sudo apt install cmake
 sudo apt install libbluetooth-dev
 ```
+- ##### LCD Display
+```
+wget https://github.com/joan2937/lg/archive/master.zip
+unzip master.zip
+cd lg-master
+sudo make install
+```
+More at [waveshare.com/wiki/2.4inch_LCD_Module](https://www.waveshare.com/wiki/2.4inch_LCD_Module)
 
 ### Compilation:
 ```
@@ -25,4 +34,4 @@ make
 ```
 
 ### Executing
-Run the `BikeTourAssistant` executable that generates in build directory
+Run the `BikeTourAssistant` executable that generates in build directory (sudo is required)

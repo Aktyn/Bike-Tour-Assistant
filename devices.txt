@@ -9,6 +9,6 @@ DEVICE=BikeTourAssistant  TYPE=MESH  NODE=1  ADDRESS=B8:27:EB:57:CC:EE
   PRIMARY_SERVICE = 180A
     LECHAR = PnP ID          PERMIT=02 SIZE=7 UUID=2A50 ; index 3 
   PRIMARY_SERVICE = 112233445566778899AABBCCDDEEFF00 
-    LECHAR = Control  PERMIT=06 SIZE=2 UUID=ABCD        ; index 4
+    LECHAR = Control  PERMIT=06 SIZE=64 UUID=ABCD        ; index 4
     LECHAR = Info     PERMIT=06 SIZE=1 UUID=CDEF        ; index 5
     LECHAR = Data     PERMIT=12 SIZE=1 UUID=DEAF        ; index 6 notify capable
