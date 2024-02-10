@@ -1,16 +1,19 @@
+#include "bluetooth_server.h"
+
+#include "btferret/btlib.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "btferret/btlib.h"
 
 int le_callback(int clientnode, int operation, int cticn);
 
-int main()
+void startBluetoothServer()
 {
   int index;
   unsigned char buf[32], uuid[2];
 
   if (init_blue("../devices.txt") == 0)
-    return (0);
+    return;
   // write 56 to Info (index 5 in devices.txt)
   // or find index from UUID
   uuid[0] = 0xCD;
@@ -37,7 +40,7 @@ int main()
   // write a characteristic, call the function le_callback()
   // Call LE_TIMER in le_callback every 100 deci-seconds (10 seconds)
   close_all();
-  return (0);
+  return;
 }
 
 int le_callback(int clientnode, int operation, int cticn)
@@ -88,5 +91,5 @@ int le_callback(int clientnode, int operation, int cticn)
     //         PgUp. Full list in keys_to_callback() section
   }
 
-  return (SERVER_CONTINUE);
+  return SERVER_CONTINUE;
 }

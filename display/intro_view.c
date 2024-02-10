@@ -22,17 +22,6 @@ void showIntroView(void)
   LCD_2IN4_Init();
   LCD_2IN4_Clear(BLACK);
   LCD_SetBacklight(1000);
-  // LCD_SetBacklight(800);
-
-  // for (uint16_t y = 0; y < LCD_2IN4_HEIGHT; y++)
-  // {
-  //   for (uint16_t x = 0; x < LCD_2IN4_WIDTH; x++)
-  //   {
-  //     // LCD_2IN4_SetCursor(x, y);
-  //     // LCD_2IN4_WriteData_Word(CYAN);
-  //     LCD_2IN4_DrawPaint(x, y, ((x / 16 + y / 16)) % 2 == 0 ? BLACK : WHITE);
-  //   }
-  // }
 
   drawImageFromBitmapFile("../assets/logo128x128.bmp",
                           (LCD_2IN4_WIDTH - LOGO_WIDTH) / 2, (LCD_2IN4_HEIGHT / 2 - LOGO_HEIGHT) / 2,
@@ -64,7 +53,7 @@ void showIntroView(void)
 
   showThreeDotsLoader((LCD_2IN4_WIDTH - THREE_DOTS_LOADER_WIDTH) / 2, LCD_2IN4_HEIGHT - THREE_DOTS_LOADER_HEIGHT - 8);
 
-  DEV_Delay_ms(5000);
+  DEV_Delay_ms(100);
 
   DEV_ModuleExit();
 }

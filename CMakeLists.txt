@@ -6,6 +6,7 @@ set(DIR_FONTS "./lib/Fonts")
 set(DIR_GUI "./lib/GUI")
 set(DIR_EPD "./lib/LCD")
 set(DIR_DISPLAY "./display")
+set(DIR_BLUETOOTH "./bluetooth")
 
 set(C_INCLUDE_DIRECTORIES
     ${DIR_Config}
@@ -20,6 +21,7 @@ file(GLOB DIR_FONTS_sources "${DIR_FONTS}/*.c")
 file(GLOB DIR_GUI_sources "${DIR_GUI}/*.c")
 file(GLOB DIR_EPD_sources "${DIR_EPD}/*.c")
 file(GLOB DIR_DISPLAY_sources "${DIR_DISPLAY}/*.c")
+file(GLOB DIR_BLUETOOTH_sources "${DIR_BLUETOOTH}/*.c")
 
 # Define source files using glob functions
 set(C_SOURCES
@@ -28,12 +30,14 @@ set(C_SOURCES
     ${DIR_GUI_sources}
     ${DIR_EPD_sources}
     ${DIR_DISPLAY_sources}
+    ${DIR_BLUETOOTH_sources}
 )
 
-add_executable(BikeTourAssistant main.c btferret/btlib.c ${C_SOURCES})
+add_executable(BikeTourAssistant main.c bluetooth/btferret/btlib.c ${C_SOURCES})
 target_include_directories(BikeTourAssistant PUBLIC ${C_INCLUDE_DIRECTORIES})
 
 target_compile_definitions(BikeTourAssistant PUBLIC USE_DEV_LIB)
+target_compile_definitions(BikeTourAssistant PUBLIC USE_DEBUG)
 
 target_link_libraries(BikeTourAssistant bluetooth)
 target_link_libraries(BikeTourAssistant lgpio)

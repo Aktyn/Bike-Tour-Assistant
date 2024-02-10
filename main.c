@@ -1,10 +1,24 @@
 #include "LCD_2inch4.h"
 #include "DEV_Config.h"
 #include "display/intro_view.h"
+#include "bluetooth/bluetooth_server.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h> //signal()
+#include <pthread.h>
+
+void *displayThread(void *args)
+{
+  showIntroView();
+  return NULL;
+}
+
+void *bluetoothThread(void *args)
+{
+  startBluetoothServer();
+  return NULL;
+}
 
 int main()
 {
@@ -22,16 +36,23 @@ int main()
     exit(0);
   }
 
-  // LCD_2IN4_test();
-  showIntroView();
+  pthread_t display_thread_id;
+  pthread_t bluetooth_thread_id;
+
+  pthread_create(&display_thread_id, NULL, displayThread, NULL);
+  pthread_create(&bluetooth_thread_id, NULL, bluetoothThread, NULL);
+
+  pthread_join(display_thread_id, NULL);
+  pthread_join(bluetooth_thread_id, NULL);
 
   return 0;
 }
 
-// void LCD_2IN4_test(void)
-// {
-//   // Exception handling:ctrl + c
-//   signal(SIGINT, Handler_2IN4_LCD);
+// TODO: cleanup
+//  void LCD_2IN4_test(void)
+//  {
+//    // Exception handling:ctrl + c
+//    signal(SIGINT, Handler_2IN4_LCD);
 
 //   /* Module Init */
 //   if (DEV_ModuleInit() != 0)
