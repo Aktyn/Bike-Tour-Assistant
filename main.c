@@ -8,16 +8,28 @@
 #include <signal.h> //signal()
 #include <pthread.h>
 
-void *displayThread(void *args)
+void *bluetoothThread(void *input)
 {
-  showIntroView();
+  startBluetoothServer(input);
+  pthread_exit(0);
   return NULL;
 }
 
-void *bluetoothThread(void *args)
+void *displayThread(void *args)
 {
-  startBluetoothServer();
+  showIntroView();
+  pthread_exit(0);
   return NULL;
+}
+
+void terminate(int signo)
+{
+  Handler_2IN4_LCD(signo);
+}
+
+void handleMessage(unsigned char *data)
+{
+  printf("Data to process: %s\n", data); // TODO
 }
 
 int main()
@@ -27,9 +39,9 @@ int main()
 #endif
 
   // Exception handling:ctrl + c
-  signal(SIGINT, Handler_2IN4_LCD);
+  signal(SIGINT, terminate);
 
-  /* Module Init */
+  /* LCD module Init */
   if (DEV_ModuleInit() != 0)
   {
     DEV_ModuleExit();
@@ -40,10 +52,11 @@ int main()
   pthread_t bluetooth_thread_id;
 
   pthread_create(&display_thread_id, NULL, displayThread, NULL);
-  pthread_create(&bluetooth_thread_id, NULL, bluetoothThread, NULL);
+  pthread_create(&bluetooth_thread_id, NULL, bluetoothThread, handleMessage);
 
-  pthread_join(display_thread_id, NULL);
   pthread_join(bluetooth_thread_id, NULL);
+  pthread_cancel(display_thread_id);
+  // pthread_join(display_thread_id, NULL);
 
   return 0;
 }

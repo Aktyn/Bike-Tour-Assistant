@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int le_callback(int clientnode, int operation, int cticn);
+int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsigned char *data));
 
-void startBluetoothServer()
+void startBluetoothServer(void (*onMessage)(unsigned char *data))
 {
   int index;
   unsigned char buf[32], uuid[2];
@@ -34,7 +34,7 @@ void startBluetoothServer()
   keys_to_callback(KEY_ON, 0); // OPTIONAL - key presses are sent to le_callback
                                // with operation=LE_KEYPRESS and cticn=key code
                                // The key that stops the server changes from x to ESC
-  le_server(le_callback, 100);
+  le_server(le_callback, 100, onMessage);
   // Become an LE server and wait for clients to connect.
   // when a client performs an operation such as connect, or
   // write a characteristic, call the function le_callback()
@@ -43,7 +43,7 @@ void startBluetoothServer()
   return;
 }
 
-int le_callback(int clientnode, int operation, int cticn)
+int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsigned char *data))
 {
   unsigned char buf[32];
 
@@ -62,7 +62,8 @@ int le_callback(int clientnode, int operation, int cticn)
     // clientnode has just written local characteristic cticn
     read_ctic(localnode(), cticn, buf, sizeof(buf)); // read characteristic to buf
     printf("Client %d has written characteristic %d with data %d\n", clientnode, cticn);
-    printf("Data: %s\n", buf);
+    // printf("Data: %s\n", buf);
+    onMessage(buf);
   }
   else if (operation == LE_DISCONNECT)
   {

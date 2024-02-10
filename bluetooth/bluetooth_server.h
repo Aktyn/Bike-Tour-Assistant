@@ -1,6 +1,6 @@
 #ifndef __BLUETOOTH_SERVER_H
 #define __BLUETOOTH_SERVER_H
 
-void startBluetoothServer(void);
+void startBluetoothServer(void (*onMessage)(unsigned char *data));
 
 #endif // __BLUETOOTH_SERVER_H

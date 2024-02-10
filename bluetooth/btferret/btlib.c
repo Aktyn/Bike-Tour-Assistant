@@ -3240,7 +3240,7 @@ void btle_notifynode(int node)
 
 /*********** LE SERVER ***********/
 
-int le_server(int (*callback)(int clientnode, int operation, int cticn), int timerds)
+int le_server(int (*callback)(int clientnode, int operation, int cticn, void (*onMessage)(unsigned char *data)), int timerds, void (*onMessage)(unsigned char *data))
 {
   int n, dn, key, ndevice, retval, timecount, oldkm, op, cticn, cbflag, flag;
   struct devdata *dp;
@@ -3345,7 +3345,7 @@ int le_server(int (*callback)(int clientnode, int operation, int cticn), int tim
       if (callback != NULL)
       {
         setkeymode(0);
-        retval = callback(dp->node, op, cticn);
+        retval = callback(dp->node, op, cticn, onMessage);
         setkeymode(1);
         cbflag = 1;
       }
@@ -3369,7 +3369,7 @@ int le_server(int (*callback)(int clientnode, int operation, int cticn), int tim
           --dev[dn]->btletods;
           if (dev[dn]->btletods == 0)
           {
-            retval = callback(dev[dn]->node, LE_BTLETIMER, 0);
+            retval = callback(dev[dn]->node, LE_BTLETIMER, 0, onMessage);
             cbflag = 1; // one at a time
           }
         }
@@ -3384,7 +3384,7 @@ int le_server(int (*callback)(int clientnode, int operation, int cticn), int tim
         if (callback != NULL)
         {
           setkeymode(0);
-          retval = callback(localnode(), LE_TIMER, 0);
+          retval = callback(localnode(), LE_TIMER, 0, onMessage);
           setkeymode(1);
         }
         timecount = 0;
@@ -3399,7 +3399,7 @@ int le_server(int (*callback)(int clientnode, int operation, int cticn), int tim
         if (callback != NULL)
         {
           setkeymode(0);
-          retval = callback(localnode(), LE_TIMER, 0);
+          retval = callback(localnode(), LE_TIMER, 0, onMessage);
           setkeymode(1);
         }
         timecount = 0;
@@ -3417,7 +3417,7 @@ int le_server(int (*callback)(int clientnode, int operation, int cticn), int tim
       else
       {
         VPRINT "Key code %d\n",key);
-        retval = callback(localnode(), LE_KEYPRESS, key);
+        retval = callback(localnode(), LE_KEYPRESS, key, onMessage);
         key = 0;
       }
     }
