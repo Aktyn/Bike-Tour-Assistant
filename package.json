@@ -8,6 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build:android": "eas build -p android --profile production",
+    "build:dev": "eas build --profile development",
     "build:android:expo": "expo build:android -t apk",
     "ts:check": "tsc",
     "lint": "eslint --ext .js,.ts,.tsx src --fix",
@@ -35,7 +36,8 @@
     "react-native-safe-area-context": "^4.9.0",
     "react-native-screens": "^3.29.0",
     "react-native-uuid": "^2.0.1",
-    "react-native-web": "~0.19.6"
+    "react-native-web": "~0.19.6",
+    "@react-native-community/slider": "4.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

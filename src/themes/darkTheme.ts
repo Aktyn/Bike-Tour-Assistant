@@ -14,6 +14,8 @@ export const darkTheme: MD3Theme = {
     error: red[400],
     outline: blueGrey[100],
     outlineVariant: blueGrey[400],
+    onSurface: blueGrey[50],
+    onSurfaceVariant: blueGrey[400],
 
     // primaryContainer: '#f5f',
     // secondaryContainer: '#f5f',
@@ -29,8 +31,6 @@ export const darkTheme: MD3Theme = {
     // onSecondaryContainer: '#f5f',
     // onTertiary: '#f5f',
     // onTertiaryContainer: '#f5f',
-    // onSurface: '#f5f',
-    // onSurfaceVariant: '#f5f',
     // onSurfaceDisabled: '#f5f',
     // onError: '#f5f',
     // onErrorContainer: '#f5f',

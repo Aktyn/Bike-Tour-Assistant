@@ -1,6 +1,7 @@
 import EventEmitter from 'events'
 import { BleManager, State, type Device } from 'react-native-ble-plx'
 import { requestBluetoothPermission } from './common'
+import { parseMessageData, type Message } from './message'
 import { Config } from '../config'
 
 declare interface BluetoothEventEmitter {
@@ -166,7 +167,7 @@ export class Bluetooth extends BluetoothEventEmitter {
       const device = await targetDevice
         .connect({
           autoConnect: false,
-          timeout: 20_000,
+          // timeout: 20_000,
         })
         .then((d) => d.discoverAllServicesAndCharacteristics())
       this.connectedDevice = device
@@ -192,8 +193,8 @@ export class Bluetooth extends BluetoothEventEmitter {
     this.emit('connectingToTargetDevice', false)
   }
 
-  //TODO: handle errors and develop generic data sending logic
-  async sendMessage() {
+  //TODO: handle errors, sending keep-alive messages, optimize loading services and characteristics
+  async sendMessage(message: Message) {
     if (!this.connectedDevice) {
       throw new Error('Device not connected')
     }
@@ -221,7 +222,7 @@ export class Bluetooth extends BluetoothEventEmitter {
     await this.connectedDevice.writeCharacteristicWithoutResponseForService(
       writeableCharacteristic.serviceUUID,
       writeableCharacteristic.uuid,
-      'aGVsbG8gbWlzcyB0YXBweQ==',
+      parseMessageData(message),
     )
   }
 }
