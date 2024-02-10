@@ -9,7 +9,9 @@
         "ostream": "c",
         "btlib.h": "c",
         "dev_config.h": "c",
-        "gui_bmp.h": "c"
+        "gui_bmp.h": "c",
+        "debug.h": "c",
+        "gui_paint.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

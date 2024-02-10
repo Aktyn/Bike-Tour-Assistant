@@ -1,7 +1,10 @@
 #include "LCD_2inch4.h"
 #include "DEV_Config.h"
+#include "GUI_Paint.h"
 #include "display/intro_view.h"
+#include "display/draw.h"
 #include "bluetooth/bluetooth_server.h"
+#include "core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,8 +20,20 @@ void *bluetoothThread(void *input)
 
 void *displayThread(void *args)
 {
-  showIntroView();
-  pthread_exit(0);
+  while (CoreState.isRunning)
+  {
+    if (!CoreState.isBluetoothConnected)
+    {
+      showIntroView(); // This function includes while loop breaking on bluetooth connection
+    }
+    clearScreen(BLACK);
+    drawLine("TODO", 0, LCD_2IN4_HEIGHT / 4 - Font24.Height / 2, LCD_2IN4_WIDTH, GRAY, BLACK, &Font24, ALIGN_CENTER);
+
+    while (CoreState.isBluetoothConnected)
+    {
+      // noop
+    }
+  }
   return NULL;
 }
 
@@ -29,7 +44,27 @@ void terminate(int signo)
 
 void handleMessage(unsigned char *data)
 {
-  printf("Data to process: %s\n", data); // TODO
+  if (!CoreState.isBluetoothConnected)
+  {
+    return;
+  }
+
+  printf("Handling message: %d\n", data[0]);
+
+  switch (data[0])
+  {
+  case 0x01: // PING
+    // CoreState.isBluetoothConnected = false;
+    break;
+  case 0x02: // TODO
+    printf("Setting backlight to: %d%\n", data[1]);
+    uint8_t lightness = data[1];
+    LCD_SetBacklight(lightness * 10);
+    break;
+  default:
+    printf("Unknown message: %d\n", data[0]);
+    break;
+  }
 }
 
 int main()
@@ -40,6 +75,8 @@ int main()
 
   // Exception handling:ctrl + c
   signal(SIGINT, terminate);
+
+  Core_Init();
 
   /* LCD module Init */
   if (DEV_ModuleInit() != 0)

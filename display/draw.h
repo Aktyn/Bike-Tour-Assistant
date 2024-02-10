@@ -13,10 +13,13 @@ typedef enum TEXT_ALIGN
 
 uint16_t *allocateImageBuffer(uint16_t width, uint16_t height);
 uint16_t *allocateImageBufferFromBitmapFile(const char *path, uint16_t width, uint16_t height);
+
 void drawImageBuffer(const uint16_t *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 void drawImageFromBitmapFile(const char *path, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 void drawLine(const char *text,
               uint16_t x, uint16_t y, uint16_t width,
               uint16_t color, uint16_t background, sFONT *font, TEXT_ALIGN align);
+
+void clearScreen(uint16_t color);
 
 #endif // __DISPLAY_DRAW_H

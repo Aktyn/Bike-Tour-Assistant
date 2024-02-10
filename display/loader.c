@@ -10,7 +10,7 @@
 
 #define DOTS_COUNT 4
 
-void showThreeDotsLoader(uint16_t x, uint16_t y)
+void showThreeDotsLoader(uint16_t x, uint16_t y, bool (*condition)())
 {
   int16_t *loaderImage = allocateImageBuffer(THREE_DOTS_LOADER_WIDTH, THREE_DOTS_LOADER_HEIGHT);
 
@@ -22,8 +22,7 @@ void showThreeDotsLoader(uint16_t x, uint16_t y)
 
   uint16_t offset = 0;
 
-  uint8_t running = 1; // TODO: cancel on bluetooth connection
-  while (running)
+  while (condition() == true)
   {
     Paint_Clear(BLACK);
 

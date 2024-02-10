@@ -33,7 +33,7 @@ set(C_SOURCES
     ${DIR_BLUETOOTH_sources}
 )
 
-add_executable(BikeTourAssistant main.c bluetooth/btferret/btlib.c ${C_SOURCES})
+add_executable(BikeTourAssistant main.c core.c bluetooth/btferret/btlib.c ${C_SOURCES})
 target_include_directories(BikeTourAssistant PUBLIC ${C_INCLUDE_DIRECTORIES})
 
 target_compile_definitions(BikeTourAssistant PUBLIC USE_DEV_LIB)

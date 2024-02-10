@@ -1,8 +1,10 @@
 #include "bluetooth_server.h"
 
 #include "btferret/btlib.h"
+#include "../core.h"
+#include "Debug.h"
 
-#include <stdio.h>
+// #include <stdio.h>
 #include <stdlib.h>
 
 int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsigned char *data));
@@ -50,19 +52,20 @@ int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsi
   if (operation == LE_CONNECT)
   {
     // clientnode has just connected
-    printf("Client %d has connected\n", clientnode);
+    DEBUG("Client %d has connected\n", clientnode);
+    CoreState.isBluetoothConnected = true;
   }
   else if (operation == LE_READ)
   {
     // clientnode has just read local characteristic cticn
-    printf("Client %d has read characteristic %d\n", clientnode, cticn);
+    DEBUG("Client %d has read characteristic %d\n", clientnode, cticn);
   }
   else if (operation == LE_WRITE)
   {
     // clientnode has just written local characteristic cticn
     read_ctic(localnode(), cticn, buf, sizeof(buf)); // read characteristic to buf
-    printf("Client %d has written characteristic %d with data %d\n", clientnode, cticn);
-    // printf("Data: %s\n", buf);
+    DEBUG("Client %d has written characteristic %d with data %d\n", clientnode, cticn);
+    // DEBUG("Data: %s\n", buf);
     onMessage(buf);
   }
   else if (operation == LE_DISCONNECT)
@@ -72,7 +75,8 @@ int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsi
     // return(SERVER_EXIT);
     // otherwise LE server will continue and wait for another connection
     // or operation from other clients that are still connected
-    printf("Client %d has disconnected\n", clientnode);
+    DEBUG("Client %d has disconnected\n", clientnode);
+    CoreState.isBluetoothConnected = false;
   }
   else if (operation == LE_TIMER)
   {

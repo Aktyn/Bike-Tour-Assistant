@@ -1,10 +1,11 @@
 #include "intro_view.h"
-#include "loader.h"
 
+#include "loader.h"
 #include "draw.h"
 #include "DEV_Config.h"
 #include "LCD_2inch4.h"
 #include "GUI_Paint.h"
+#include "../core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +52,8 @@ void showIntroView(void)
 
   DEV_Delay_ms(500);
 
-  showThreeDotsLoader((LCD_2IN4_WIDTH - THREE_DOTS_LOADER_WIDTH) / 2, LCD_2IN4_HEIGHT - THREE_DOTS_LOADER_HEIGHT - 8);
+  showThreeDotsLoader((LCD_2IN4_WIDTH - THREE_DOTS_LOADER_WIDTH) / 2, LCD_2IN4_HEIGHT - THREE_DOTS_LOADER_HEIGHT - 8,
+                      isBluetoothDisconnected);
 
   DEV_Delay_ms(100);
 
