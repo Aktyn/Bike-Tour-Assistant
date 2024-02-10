@@ -8,7 +8,8 @@
         "iosfwd": "c",
         "ostream": "c",
         "btlib.h": "c",
-        "dev_config.h": "c"
+        "dev_config.h": "c",
+        "gui_bmp.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
