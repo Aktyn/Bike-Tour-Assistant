@@ -1,47 +1,42 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import Slider from '@react-native-community/slider'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Text, useTheme } from 'react-native-paper'
 import { useCore } from '../context/coreContext'
-import { MessageType } from '../core/message'
-import { useDebounce } from '../hooks/useDebounce'
+import { useCoreEvent } from '../hooks/useCoreEvent'
 
 export const Main = () => {
   const theme = useTheme()
-  const { bluetooth } = useCore()
+  const { deviceSettings } = useCore()
 
-  //TODO: store some settings locally
-  const [lightness, setLightness] = useState(100)
+  const [lightness, setLightness] = useState(deviceSettings.get('lightness'))
 
-  const synchronizeLightness = useDebounce(
+  useCoreEvent(deviceSettings, 'change', (settings, key) => {
+    if (key === 'lightness') {
+      setLightness(settings.lightness)
+    }
+  })
+
+  const handleLightnessChange = useCallback(
     (value: number) => {
-      bluetooth
-        .sendMessage({
-          type: MessageType.SET_LIGHTNESS,
-          data: { lightness: value },
-        })
-        .catch(console.error)
+      deviceSettings.set('lightness', value)
     },
-    200,
-    [bluetooth],
+    [deviceSettings],
   )
-
-  useEffect(() => {
-    synchronizeLightness(lightness)
-  }, [lightness, synchronizeLightness])
 
   return (
     <View style={styles.container}>
       <Text variant="titleLarge">Bike Tour Assistant</Text>
       <ScrollView style={styles.scrollView}>
-        <Text>Display lightness: {Math.round(lightness)}%</Text>
+        <Text>Display lightness: {Math.floor(lightness)}%</Text>
         <Slider
           style={{ width: '100%', height: 40 }}
           minimumValue={0}
           maximumValue={100}
           value={lightness}
-          onValueChange={setLightness}
+          onValueChange={handleLightnessChange}
         />
+        <Text>TODO: loading tour file</Text>
       </ScrollView>
       <Text
         variant="labelSmall"

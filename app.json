@@ -15,6 +15,7 @@
       "**/*"
     ],
     "ios": {
+      "usesIcloudStorage": true,
       "supportsTablet": true,
       "bundleIdentifier": "bike-tour-assistant"
     },
@@ -37,7 +38,8 @@
     "owner": "aktyn",
     "plugins": [
       "react-native-ble-plx",
-      "expo-font"
+      "expo-font",
+      "expo-document-picker"
     ]
   }
 }

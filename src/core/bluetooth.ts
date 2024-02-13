@@ -54,6 +54,7 @@ export class Bluetooth extends BluetoothEventEmitter {
   destroy() {
     console.info('Destroying bluetooth core...')
     this.bleManager?.destroy()
+    super.removeAllListeners()
   }
 
   async init() {
@@ -89,6 +90,10 @@ export class Bluetooth extends BluetoothEventEmitter {
 
   isConnectingToTargetDevice() {
     return this.connectingToTargetDevice
+  }
+
+  isConnectedToDevice() {
+    return !!this.connectedDevice
   }
 
   getDiscoveredDevices() {
