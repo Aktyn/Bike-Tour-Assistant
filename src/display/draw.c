@@ -14,7 +14,7 @@ uint16_t *allocateImageBuffer(uint16_t width, uint16_t height)
   uint16_t *image;
   if ((image = (uint16_t *)malloc(image_size)) == NULL)
   {
-    DEBUG("Failed to allocate memory for image buffer...\r\n");
+    DEBUG("Failed to allocate memory for image buffer...\n");
     exit(0);
   }
   return image;

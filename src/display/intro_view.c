@@ -18,7 +18,7 @@
 
 void showIntroView(void)
 {
-  printf("Showing intro view...\r\n");
+  printf("Showing intro view...\n");
 
   LCD_2IN4_Init();
   LCD_2IN4_Clear(BLACK);

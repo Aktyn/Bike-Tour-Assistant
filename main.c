@@ -1,9 +1,10 @@
 #include "LCD_2inch4.h"
 #include "DEV_Config.h"
 #include "GUI_Paint.h"
+#include "bluetooth/bluetooth_server.h"
 #include "display/intro_view.h"
 #include "display/draw.h"
-#include "bluetooth/bluetooth_server.h"
+#include "camera/camera.h"
 #include "core.h"
 
 #include <stdio.h>
@@ -54,12 +55,19 @@ void handleMessage(unsigned char *data)
   switch (data[0])
   {
   case 0x01: // PING
-    // CoreState.isBluetoothConnected = false;
+    if (CoreState.isBluetoothConnected)
+    {
+      // TODO: send pong
+    }
     break;
-  case 0x02: // TODO
+  case 0x02:
     printf("Setting backlight to: %d%\n", data[1]);
     uint8_t lightness = data[1];
     LCD_SetBacklight(lightness * 10);
+    break;
+  case 0x03:
+    printf("Taking photo\n");
+    takePhoto();
     break;
   default:
     printf("Unknown message: %d\n", data[0]);
@@ -70,7 +78,7 @@ void handleMessage(unsigned char *data)
 int main()
 {
 #if USE_DEV_LIB
-  printf("Using dev lib\r\n");
+  printf("Using dev lib\n");
 #endif
 
   // Exception handling:ctrl + c
@@ -95,9 +103,6 @@ int main()
   pthread_cancel(display_thread_id);
   // pthread_join(display_thread_id, NULL);
 
-  // Taking photos with this command every 3 minutes for a 24 hours takes about 10gb of space on raspberry pi (2.3mb per photo)
-  // libcamera-still -n --timestamp --immediate --autofocus-on-capture
-
   return 0;
 }
 
@@ -115,7 +120,7 @@ int main()
 //   }
 
 //   /* LCD Init */
-//   printf("2inch4 LCD demo...\r\n");
+//   printf("2inch4 LCD demo...\n");
 //   LCD_2IN4_Init();
 //   LCD_2IN4_Clear(WHITE);
 //   LCD_SetBacklight(1000); // 1024
@@ -124,7 +129,7 @@ int main()
 //   UWORD *BlackImage;
 //   if ((BlackImage = (UWORD *)malloc(image_size)) == NULL)
 //   {
-//     printf("Failed to apply for black memory...\r\n");
+//     printf("Failed to apply for black memory...\n");
 //     exit(0);
 //   }
 
@@ -133,7 +138,7 @@ int main()
 //   Paint_Clear(WHITE);
 //   Paint_SetRotate(ROTATE_0);
 //   // /* GUI */
-//   printf("drawing...\r\n");
+//   printf("drawing...\n");
 //   // /*2.Drawing on the image*/
 //   Paint_DrawPoint(5, 10, BLACK, DOT_PIXEL_1X1, DOT_STYLE_DFT);
 //   Paint_DrawPoint(5, 25, BLACK, DOT_PIXEL_2X2, DOT_STYLE_DFT);
@@ -160,7 +165,7 @@ int main()
 //   LCD_2IN4_Display((UBYTE *)BlackImage);
 //   DEV_Delay_ms(3000);
 //   // /* show bmp */
-//   printf("show bmp\r\n");
+//   printf("show bmp\n");
 
 //   // GUI_ReadBmp("../assets/LCD_2inch4.bmp");
 //   // LCD_2IN4_Display((UBYTE *)BlackImage);
