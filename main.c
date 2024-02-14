@@ -95,6 +95,9 @@ int main()
   pthread_cancel(display_thread_id);
   // pthread_join(display_thread_id, NULL);
 
+  // Taking photos with this command every 3 minutes for a 24 hours takes about 10gb of space on raspberry pi (2.3mb per photo)
+  // libcamera-still -n --timestamp --immediate --autofocus-on-capture
+
   return 0;
 }
 
