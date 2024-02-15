@@ -40,9 +40,26 @@ char *executeCommand(const char *command)
   char buffer[128];
   while (fgets(buffer, sizeof(buffer), pipe) != NULL)
   {
-    cmd_output_size += strlen(buffer) + 1;
-    extendBuffer(&cmd_output, cmd_output_size);
-    strcat(cmd_output, buffer);
+    if (cmd_output_size == 0)
+    {
+      cmd_output_size += strlen(buffer) + 1;
+      free(cmd_output);
+      cmd_output = (char *)malloc(cmd_output_size * sizeof(char));
+      if (cmd_output == NULL)
+      {
+        fprintf(stderr, "Failed to allocate memory.\n");
+        return NULL;
+      }
+      strcpy(cmd_output, buffer);
+      cmd_output[cmd_output_size - 1] = '\0'; // Ensure null termination
+    }
+    else
+    {
+      cmd_output_size += strlen(buffer) + 1;
+      extendBuffer(&cmd_output, cmd_output_size);
+      strcat(cmd_output, buffer);
+      cmd_output[cmd_output_size - 1] = '\0'; // Ensure null termination
+    }
   }
 
   int exit_status = pclose(pipe);
@@ -67,7 +84,7 @@ int safeCreateDirectory(const char *path)
     char *mkdir_command = executeCommand(mkdir_command_input);
     if (mkdir_command == NULL)
     {
-      printf("Error creating directory for camera photos\n");
+      printf("Error creating directory: %s\n", path);
       return 1;
     }
     else

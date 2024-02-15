@@ -1,11 +1,14 @@
 #include "bluetooth_server.h"
 
-#include "btferret/btlib.h"
 #include "../core.h"
 #include "Debug.h"
 
-// #include <stdio.h>
 #include <stdlib.h>
+
+extern "C"
+{
+#include "btferret/btlib.h"
+}
 
 int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsigned char *data));
 

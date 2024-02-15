@@ -1,6 +1,4 @@
-#include "LCD_2inch4.h"
-#include "DEV_Config.h"
-#include "GUI_Paint.h"
+#include "Debug.h"
 #include "bluetooth/bluetooth_server.h"
 #include "display/intro_view.h"
 #include "display/draw.h"
@@ -11,10 +9,18 @@
 #include <stdlib.h>
 #include <signal.h> //signal()
 #include <pthread.h>
+#include <time.h>
 
-void *bluetoothThread(void *input)
+extern "C"
 {
-  startBluetoothServer(input);
+#include "DEV_Config.h"
+#include "LCD_2inch4.h"
+#include "GUI_Paint.h"
+}
+
+void *bluetoothThread(void (*onMessage)(unsigned char *data))
+{
+  startBluetoothServer(onMessage);
   pthread_exit(0);
   return NULL;
 }
@@ -32,9 +38,18 @@ void *displayThread(void *args)
 
     while (CoreState.isBluetoothConnected)
     {
-      // noop
+      // sleep for 16ms
+      usleep(16 * 1000);
     }
   }
+  return NULL;
+}
+
+void *takePhotoAsync(void *args)
+{
+  printf("Taking photo\n");
+  takePhoto();
+  // TODO: display last taken photo for a few seconds
   return NULL;
 }
 
@@ -50,25 +65,28 @@ void handleMessage(unsigned char *data)
     return;
   }
 
-  printf("Handling message: %d\n", data[0]);
-
   switch (data[0])
   {
-  case 0x01: // PING
+  case 1: // PING
+    DEBUG("Ping\n");
     if (CoreState.isBluetoothConnected)
     {
       // TODO: send pong
     }
     break;
-  case 0x02:
+  case 2:
+  {
     printf("Setting backlight to: %d%\n", data[1]);
     uint8_t lightness = data[1];
     LCD_SetBacklight(lightness * 10);
-    break;
-  case 0x03:
-    printf("Taking photo\n");
-    takePhoto();
-    break;
+  }
+  break;
+  case 3:
+  {
+    pthread_t photo_thread_id;
+    pthread_create(&photo_thread_id, NULL, takePhotoAsync, NULL);
+  }
+  break;
   default:
     printf("Unknown message: %d\n", data[0]);
     break;
@@ -97,7 +115,7 @@ int main()
   pthread_t bluetooth_thread_id;
 
   pthread_create(&display_thread_id, NULL, displayThread, NULL);
-  pthread_create(&bluetooth_thread_id, NULL, bluetoothThread, handleMessage);
+  pthread_create(&bluetooth_thread_id, NULL, (void *(*)(void *))bluetoothThread, (void *)handleMessage);
 
   pthread_join(bluetooth_thread_id, NULL);
   pthread_cancel(display_thread_id);

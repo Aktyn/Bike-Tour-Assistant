@@ -1,12 +1,15 @@
 #include "draw.h"
 
-#include "DEV_Config.h"
-#include "LCD_2inch4.h"
-#include "GUI_Paint.h"
-#include "GUI_BMP.h"
-
 #include <stdio.h>
 #include <stdlib.h>
+
+extern "C"
+{
+#include "DEV_Config.h"
+#include "LCD_2inch4.h"
+#include "GUI_BMP.h"
+#include "GUI_Paint.h"
+}
 
 uint16_t *allocateImageBuffer(uint16_t width, uint16_t height)
 {

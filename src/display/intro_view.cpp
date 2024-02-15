@@ -2,13 +2,17 @@
 
 #include "loader.h"
 #include "draw.h"
-#include "DEV_Config.h"
-#include "LCD_2inch4.h"
-#include "GUI_Paint.h"
 #include "../core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+extern "C"
+{
+#include "DEV_Config.h"
+#include "LCD_2inch4.h"
+#include "GUI_Paint.h"
+}
 
 #define LOGO_WIDTH 128
 #define LOGO_HEIGHT 128

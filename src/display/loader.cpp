@@ -1,18 +1,22 @@
 #include "loader.h"
 
 #include "draw.h"
-#include "DEV_Config.h"
-#include "LCD_2inch4.h"
-#include "GUI_Paint.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+extern "C"
+{
+#include "DEV_Config.h"
+#include "LCD_2inch4.h"
+#include "GUI_Paint.h"
+}
 
 #define DOTS_COUNT 4
 
 void showThreeDotsLoader(uint16_t x, uint16_t y, bool (*condition)())
 {
-  int16_t *loaderImage = allocateImageBuffer(THREE_DOTS_LOADER_WIDTH, THREE_DOTS_LOADER_HEIGHT);
+  uint16_t *loaderImage = allocateImageBuffer(THREE_DOTS_LOADER_WIDTH, THREE_DOTS_LOADER_HEIGHT);
 
   Paint_NewImage(loaderImage, THREE_DOTS_LOADER_WIDTH, THREE_DOTS_LOADER_HEIGHT, 0, WHITE, 24);
 
