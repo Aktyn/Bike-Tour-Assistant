@@ -46,6 +46,11 @@ export class DeviceSettings extends DeviceSettingsEventEmitter {
     super()
   }
 
+  destroy() {
+    console.info('Destroying device settings core...')
+    super.removeAllListeners()
+  }
+
   async init() {
     AsyncStorage.getItem('@settings')
       .then((settingsString) => {
