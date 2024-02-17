@@ -1,10 +1,11 @@
 import EventEmitter from 'events'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { DocumentPickerSuccessResult } from 'expo-document-picker'
 import { tryParseJSON } from '../utils'
 
 const defaultSettings = {
   lightness: 100,
-  // gpxFile: null as null | (DocumentResult & { type: 'success' }),
+  gpxFile: null as null | DocumentPickerSuccessResult,
   // mapZoom: 16, //TODO
   // gpsAccuracy: LocationAccuracy.Highest, //TODO
   /** Minimum time to wait between each update in milliseconds. Default value may depend on accuracy option. */
@@ -75,9 +76,9 @@ export class DeviceSettings extends DeviceSettingsEventEmitter {
     return this.settingsStore[key]
   }
 
-  set(
-    key: keyof DeviceSettingsSchema,
-    value: DeviceSettingsSchema[keyof DeviceSettingsSchema],
+  set<Key extends keyof DeviceSettingsSchema>(
+    key: Key,
+    value: DeviceSettingsSchema[Key],
   ) {
     console.info(`Setting "${key}" to "${value}"`)
     this.settingsStore[key] = value

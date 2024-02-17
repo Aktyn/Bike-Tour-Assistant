@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react'
 import Slider from '@react-native-community/slider'
+import * as DocumentPicker from 'expo-document-picker'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { Button, Text, useTheme } from 'react-native-paper'
+import { Button, Divider, IconButton, Text, useTheme } from 'react-native-paper'
 import { useCore } from '../context/coreContext'
 import { MessageType } from '../core/message'
 import { useCoreEvent } from '../hooks/useCoreEvent'
@@ -11,10 +12,16 @@ export const Main = () => {
   const { deviceSettings, bluetooth } = useCore()
 
   const [lightness, setLightness] = useState(deviceSettings.get('lightness'))
+  const [gpxFile, setGpxFile] = useState(deviceSettings.get('gpxFile'))
 
   useCoreEvent(deviceSettings, 'change', (settings, key) => {
-    if (key === 'lightness') {
-      setLightness(settings.lightness)
+    switch (key) {
+      case 'lightness':
+        setLightness(settings.lightness)
+        break
+      case 'gpxFile':
+        setGpxFile(settings.gpxFile)
+        break
     }
   })
 
@@ -25,6 +32,26 @@ export const Main = () => {
     [deviceSettings],
   )
 
+  const selectTourFile = useCallback(() => {
+    DocumentPicker.getDocumentAsync({
+      type: ['application/gpx+xml', 'application/octet-stream'],
+    })
+      .then((data) => {
+        if (data.canceled) {
+          throw new Error('File selection canceled')
+        }
+        deviceSettings.set('gpxFile', data)
+      })
+
+      .catch((error) =>
+        console.error(
+          `Cannot load gpx file. Error: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        ),
+      )
+  }, [deviceSettings])
+
   return (
     <View style={styles.container}>
       <Text variant="titleLarge">Bike Tour Assistant</Text>
@@ -32,7 +59,9 @@ export const Main = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
       >
-        <Text>Display lightness: {Math.floor(lightness)}%</Text>
+        <Text variant="bodyLarge">
+          Display lightness: {Math.floor(lightness)}%
+        </Text>
         <Slider
           style={{ width: '100%', height: 40 }}
           minimumValue={0}
@@ -40,7 +69,30 @@ export const Main = () => {
           value={lightness}
           onValueChange={handleLightnessChange}
         />
-        <Text>TODO: loading tour file</Text>
+        {/* TODO: switch to enable auto lightness (based on sunrise/sundawn time in current location) */}
+        <Divider />
+        {gpxFile ? (
+          <View style={styles.horizontalView}>
+            <Text variant="bodyLarge">{gpxFile.assets.at(0)?.name ?? '-'}</Text>
+            <IconButton
+              icon="delete"
+              iconColor={theme.colors.onSurface}
+              size={24}
+              onPress={() => deviceSettings.set('gpxFile', null)}
+            />
+          </View>
+        ) : (
+          <Text variant="bodyLarge">No tour file selected</Text>
+        )}
+        <Button
+          dark
+          mode="contained"
+          icon="map-marker-path"
+          onPress={selectTourFile}
+        >
+          Select tour file
+        </Button>
+        <Divider />
         <Button
           dark
           mode="contained"
@@ -86,6 +138,11 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     rowGap: 16,
+  },
+  horizontalView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   footer: {
     paddingHorizontal: 24,
