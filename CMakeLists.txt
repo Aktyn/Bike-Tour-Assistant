@@ -58,6 +58,7 @@ target_compile_definitions(BikeTourAssistant PUBLIC USE_DEBUG)
 target_link_libraries(BikeTourAssistant bluetooth)
 target_link_libraries(BikeTourAssistant lgpio)
 target_link_libraries(BikeTourAssistant pthread)
+target_link_libraries(BikeTourAssistant jpeg)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

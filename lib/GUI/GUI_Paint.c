@@ -66,7 +66,8 @@ void Paint_NewImage(UWORD *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD
   //    printf(" EPD_WIDTH / 8 = %d\r\n",  122 / 8);
 
   Paint.Rotate = Rotate;
-  Paint.Mirror = MIRROR_NONE;
+  // Paint.Mirror = MIRROR_NONE;
+  Paint.Mirror = MIRROR_ORIGIN;
 
   if (Rotate == ROTATE_0 || Rotate == ROTATE_180)
   {

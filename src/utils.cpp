@@ -96,3 +96,51 @@ int safeCreateDirectory(const char *path)
 
   return 0;
 }
+
+uint16_t rgbToRgb666(uint8_t red, uint8_t green, uint8_t blue)
+{
+  uint16_t red_666 = (red >> 2) & 0x3F;
+  uint16_t green_666 = ((red & 0x03) << 4) | ((green >> 2) & 0x3F);
+  uint16_t blue_666 = (blue >> 3) & 0x1F;
+
+  return (red_666 << 12) | (green_666 << 6) | blue_666;
+}
+
+uint16_t rgbToRgb565(uint8_t red, uint8_t green, uint8_t blue)
+{
+  uint16_t r = (blue >> 3) & 0x1F;
+  uint16_t g = ((blue & 0x07) << 5) | ((red >> 3) & 0x3F);
+  uint16_t b = (green >> 3) & 0x1F;
+
+  return (r << 11) | (g << 5) | b;
+}
+
+uint16_t rgbToRgb444(uint8_t red, uint8_t green, uint8_t blue)
+{
+  uint16_t red_444 = (red >> 4) & 0x0F;
+  uint16_t green_444 = (green >> 4) & 0x0F;
+  uint16_t blue_444 = (blue >> 4) & 0x0F;
+
+  return (red_444 << 8) | (green_444 << 4) | blue_444;
+}
+
+uint16_t convertRgbColor(uint16_t color)
+{
+  return ((color << 8) & 0xff00) | (color >> 8);
+}
+
+uint16_t findNextPowerOf2(uint16_t n)
+{
+  if (n && !(n & (n - 1)))
+    return n;
+
+  uint16_t count = 0;
+
+  while (n != 0)
+  {
+    n >>= 1;
+    count += 1;
+  }
+
+  return 1 << count;
+}

@@ -9,12 +9,19 @@ Separate branch contains Android project for phone control and GPS signal source
 
 ---
 
+### Hardware
+- ##### Raspberry Pi Zero 2 W
+- ##### [2.4inch LCD Module](https://www.waveshare.com/wiki/2.4inch_LCD_Module) ([Hardware connection table](https://www.waveshare.com/wiki/2.4inch_LCD_Module#Raspberry_Pi_hardware_connection))
+- ##### Any compatible raspberry pi camera (e.g.: RPi Zero V1.3 Camera)
+- Any power source for raspberry pi
+
 ### Prerequisites: 
-- ##### Bluetooth
+- ##### Dependencies
 ```
 sudo apt install build-essential
 sudo apt install cmake
 sudo apt install libbluetooth-dev
+sudo apt install libjpeg-dev
 ```
 - ##### LCD Display
 ```

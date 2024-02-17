@@ -9,13 +9,13 @@
 #include <limits.h>
 #include <time.h>
 
-void takePhoto(void)
+std::string takePhoto(void)
 {
   char *pwd_output = executeCommand("pwd");
   if (pwd_output == NULL)
   {
     printf("Error executing `pwd` command\n");
-    return;
+    return "";
   }
 
   char directory[PATH_MAX];
@@ -31,7 +31,7 @@ void takePhoto(void)
   if (safeCreateDirectory(photos_path) != 0)
   {
     printf("Error creating directory for camera photos\n");
-    return;
+    return "";
   }
 
   time_t current_time;
@@ -46,11 +46,13 @@ void takePhoto(void)
   if (libcamera_output == NULL)
   {
     printf("Error executing `libcamera-still` command\n");
-    return;
+    return "";
   }
   else
   {
     free(libcamera_output);
     DEBUG("Photo taken at %ld\n", current_time);
   }
+
+  return std::string(photos_path) + "/" + std::to_string(current_time) + ".jpg";
 }

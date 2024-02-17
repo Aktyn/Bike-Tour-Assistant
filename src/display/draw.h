@@ -16,6 +16,7 @@ uint16_t *allocateImageBufferFromBitmapFile(const char *path, uint16_t width, ui
 
 void drawImageBuffer(const uint16_t *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 void drawImageFromBitmapFile(const char *path, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+int drawImageFromJpgFile(const char *path, uint16_t x, uint16_t y, uint16_t target_width);
 void drawLine(const char *text,
               uint16_t x, uint16_t y, uint16_t width,
               uint16_t color, uint16_t background, sFONT *font, TEXT_ALIGN align);

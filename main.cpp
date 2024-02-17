@@ -10,6 +10,7 @@
 #include <signal.h> //signal()
 #include <pthread.h>
 #include <time.h>
+#include <iostream>
 
 extern "C"
 {
@@ -34,7 +35,9 @@ void *displayThread(void *args)
       showIntroView(); // This function includes while loop breaking on bluetooth connection
     }
     clearScreen(BLACK);
-    drawLine("TODO", 0, LCD_2IN4_HEIGHT / 4 - Font24.Height / 2, LCD_2IN4_WIDTH, GRAY, BLACK, &Font24, ALIGN_CENTER);
+    drawLine("TODO",
+             0, LCD_2IN4_HEIGHT * 3 / 4 - Font24.Height / 2, LCD_2IN4_WIDTH,
+             WHITE, BLACK, &Font24, ALIGN_CENTER);
 
     while (CoreState.isBluetoothConnected)
     {
@@ -47,9 +50,19 @@ void *displayThread(void *args)
 
 void *takePhotoAsync(void *args)
 {
-  printf("Taking photo\n");
-  takePhoto();
-  // TODO: display last taken photo for a few seconds
+  std::cout << "Taking photo" << std::endl;
+  std::string file_path = takePhoto();
+  if (file_path.empty())
+  {
+    std::cout << "Error taking photo" << std::endl;
+    return NULL;
+  }
+
+  if (CoreState.isBluetoothConnected)
+  {
+    drawImageFromJpgFile(file_path.c_str(), 0, 0, LCD_2IN4_WIDTH);
+  }
+
   return NULL;
 }
 
@@ -76,7 +89,7 @@ void handleMessage(unsigned char *data)
     break;
   case 2:
   {
-    printf("Setting backlight to: %d%\n", data[1]);
+    std::cout << "Setting backlight to: " << std::to_string((uint8_t)data[1]) << "%" << std::endl;
     uint8_t lightness = data[1];
     LCD_SetBacklight(lightness * 10);
   }
@@ -88,7 +101,7 @@ void handleMessage(unsigned char *data)
   }
   break;
   default:
-    printf("Unknown message: %d\n", data[0]);
+    std::cerr << "Unknown message: " << (uint8_t)data[0] << std::endl;
     break;
   }
 }
@@ -96,7 +109,7 @@ void handleMessage(unsigned char *data)
 int main()
 {
 #if USE_DEV_LIB
-  printf("Using dev lib\n");
+  std::cout << "Using dev lib" << std::endl;
 #endif
 
   // Exception handling:ctrl + c
