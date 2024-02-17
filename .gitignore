@@ -38,3 +38,5 @@ yarn-error.*
 android/
 ios/
 .directory
+
+logs.txt

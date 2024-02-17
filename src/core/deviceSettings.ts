@@ -70,6 +70,10 @@ export class DeviceSettings extends DeviceSettingsEventEmitter {
       })
   }
 
+  getSettings() {
+    return this.settingsStore
+  }
+
   get<Key extends keyof DeviceSettingsSchema>(
     key: Key,
   ): DeviceSettingsSchema[Key] {

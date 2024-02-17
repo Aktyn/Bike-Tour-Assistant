@@ -10,6 +10,8 @@ import { Core } from './core/core'
 import { darkTheme } from './themes/darkTheme'
 import { ViewRouter } from './views/ViewRouter'
 
+import './core/gpsTask'
+
 LogBox.ignoreAllLogs()
 
 const App = () => {
@@ -22,7 +24,7 @@ const App = () => {
     setCore(coreInstance)
 
     return () => {
-      coreInstance.destroy()
+      coreInstance.destroy().catch(console.error)
     }
   }, [])
 

@@ -1,22 +1,36 @@
 import BackgroundTimer, { type TimeoutId } from 'react-native-background-timer'
 import { Bluetooth } from './bluetooth'
 import { DeviceSettings } from './deviceSettings'
+import { GPS } from './gps'
 import { MessageType } from './message'
 import { Config } from '../config'
 import { debounce } from '../utils'
 
 export class Core {
+  public static readonly instances = new Set<Core>()
+
   public readonly deviceSettings = new DeviceSettings()
   public readonly bluetooth = new Bluetooth()
+  public readonly gps = new GPS()
 
   private pingMessageInterval: TimeoutId | null = null
 
   constructor() {
     console.info('Initializing core...')
+    Core.instances.add(this)
 
     Promise.all([this.deviceSettings.init(), this.bluetooth.init()])
       .then(() => this.postInit())
       .catch(console.error)
+  }
+
+  async destroy() {
+    console.info('Destroying core...')
+    Core.instances.delete(this)
+
+    this.deviceSettings.destroy()
+    this.bluetooth.destroy()
+    await this.gps.destroy()
   }
 
   private postInit() {
@@ -63,12 +77,9 @@ export class Core {
         broadcastLightnessUpdate(settings.lightness)
       }
     })
-  }
 
-  destroy() {
-    console.info('Destroying core...')
-
-    this.deviceSettings.destroy()
-    this.bluetooth.destroy()
+    this.gps.on('coordinatesUpdate', (coordinates) => {
+      console.log(coordinates)
+    })
   }
 }

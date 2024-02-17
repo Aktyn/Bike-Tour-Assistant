@@ -205,7 +205,7 @@ export class Bluetooth extends BluetoothEventEmitter {
     await this.connectedDevice.cancelConnection()
   }
 
-  //TODO: handle errors, sending keep-alive messages, optimize loading services and characteristics
+  //TODO: handle errors, optimize loading services and characteristics
   async sendMessage(message: Message) {
     if (!this.connectedDevice) {
       throw new Error('Device not connected')

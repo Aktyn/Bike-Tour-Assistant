@@ -1,4 +1,9 @@
-import { PermissionsAndroid, Platform } from 'react-native'
+import {
+  PermissionsAndroid,
+  Platform,
+  type Permission,
+  type Rationale,
+} from 'react-native'
 
 export async function requestBluetoothPermission() {
   if (Platform.OS === 'ios') {
@@ -50,4 +55,37 @@ export async function requestBluetoothPermission() {
 
   console.error('Permission have not been granted')
   return false
+}
+
+async function requestPermission(
+  permission: Permission,
+  rationale: Partial<Rationale>,
+) {
+  try {
+    const granted = await PermissionsAndroid.request(permission, {
+      title: 'Permission',
+      message: 'Permission is required',
+      buttonNeutral: 'Ask Me Later',
+      buttonNegative: 'Cancel',
+      buttonPositive: 'OK',
+      ...rationale,
+    })
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      return true
+    } else {
+      return false
+    }
+  } catch (err) {
+    return false
+  }
+}
+
+export function requestBackgroundLocationPermissions() {
+  return requestPermission(
+    PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+    {
+      title: 'Background location permission',
+      message: 'Permission for tracking device location in background',
+    },
+  )
 }
