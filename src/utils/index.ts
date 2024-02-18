@@ -1,5 +1,7 @@
 import BackgroundTimer, { type TimeoutId } from 'react-native-background-timer'
 
+export * from './math'
+
 export function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
@@ -102,3 +104,6 @@ export function debounce<FunctionType extends AnyFunction>(
     cancel,
   ]
 }
+
+export const wait = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms))

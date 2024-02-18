@@ -1,6 +1,5 @@
 import { blueGrey, cyan, deepOrange, red } from 'material-ui-colors'
-import type { MD3Theme } from 'react-native-paper'
-import { MD3DarkTheme as DefaultTheme } from 'react-native-paper'
+import { MD3DarkTheme as DefaultTheme, type MD3Theme } from 'react-native-paper'
 
 export const darkTheme: MD3Theme = {
   ...DefaultTheme,

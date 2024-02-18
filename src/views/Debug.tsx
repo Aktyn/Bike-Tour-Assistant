@@ -1,14 +1,9 @@
-import { useEffect } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Button, Text } from 'react-native-paper'
 import { useCore } from '../context/coreContext'
 
 export const Debug = () => {
   const { gps, deviceSettings } = useCore()
-
-  useEffect(() => {
-    gps.stopObservingLocation()
-  }, [gps])
 
   return (
     <View style={styles.container}>

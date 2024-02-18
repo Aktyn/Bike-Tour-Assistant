@@ -6,7 +6,7 @@ import type { DeviceSettingsSchema } from './deviceSettings'
 import { Config } from '../config'
 import { pick } from '../utils'
 
-export type Coordinates = {
+export type LocationState = {
   timestamp: number
   latitude: number
   longitude: number
@@ -21,14 +21,14 @@ export type Coordinates = {
 
 declare interface GPSEventEmitter {
   on(
-    event: 'coordinatesUpdate',
-    listener: (coordinates: Coordinates) => void,
+    event: 'locationUpdate',
+    listener: (coordinates: LocationState) => void,
   ): this
   off(
-    event: 'coordinatesUpdate',
-    listener: (coordinates: Coordinates) => void,
+    event: 'locationUpdate',
+    listener: (coordinates: LocationState) => void,
   ): this
-  emit(event: 'coordinatesUpdate', coordinates: Coordinates): boolean
+  emit(event: 'locationUpdate', coordinates: LocationState): boolean
 
   // on(event: 'toggleGranted', listener: (granted: boolean) => void): this
   // off(event: 'toggleGranted', listener: (granted: boolean) => void): this
@@ -39,7 +39,7 @@ class GPSEventEmitter extends EventEmitter {}
 
 export class GPS extends GPSEventEmitter {
   private granted = false
-  private coordinates: Coordinates = {
+  private locationState: LocationState = {
     timestamp: 0,
     latitude: 0,
     longitude: 0,
@@ -64,12 +64,12 @@ export class GPS extends GPSEventEmitter {
   }
 
   getCoordinates() {
-    return this.coordinates
+    return this.locationState
   }
 
   /** Should be called only from TaskManager */
   updateLocation(location: LocationObject) {
-    this.coordinates = {
+    this.locationState = {
       timestamp: location.timestamp,
       heading: location.coords.heading ?? 0,
       speed: location.coords.speed ?? 0,
@@ -77,7 +77,7 @@ export class GPS extends GPSEventEmitter {
       //TODO: use altitude to calculate slope
       ...pick(location.coords, 'latitude', 'longitude'),
     }
-    this.emit('coordinatesUpdate', this.coordinates)
+    this.emit('locationUpdate', this.locationState)
   }
 
   async startObservingLocation(_settings: DeviceSettingsSchema) {
@@ -98,6 +98,7 @@ export class GPS extends GPSEventEmitter {
     const granted = await this.requestPermissions()
     if (!granted) {
       console.error('GPS permission not granted')
+      //TODO: show toast with error
       return
     }
 
@@ -130,6 +131,7 @@ export class GPS extends GPSEventEmitter {
 
   async stopObservingLocation() {
     try {
+      console.info('Stopping location updates')
       this.locationObservingOptions = null
       await Location.stopLocationUpdatesAsync(Config.GPS_TASK_NAME)
     } catch (e) {
@@ -158,7 +160,6 @@ export class GPS extends GPSEventEmitter {
     }
 
     this.granted = true
-    // this.emit('toggleGranted', this.granted)
     return true
   }
 }

@@ -46,6 +46,8 @@ export class Bluetooth extends BluetoothEventEmitter {
 
   private scanning = false
   private connectingToTargetDevice = false
+  private sendingMessage = false
+  private messagesQueue: Message[] = []
 
   constructor() {
     super()
@@ -55,6 +57,7 @@ export class Bluetooth extends BluetoothEventEmitter {
     console.info('Destroying bluetooth core...')
     this.bleManager?.destroy()
     super.removeAllListeners()
+    this.messagesQueue = []
   }
 
   async init() {
@@ -134,7 +137,7 @@ export class Bluetooth extends BluetoothEventEmitter {
         this.emit('deviceDiscovered', scannedDevice)
 
         if (scannedDevice.name === Config.TARGET_DEVICE_NAME) {
-          this.connectToTargetDevice()
+          this.connectToTargetDevice().catch(console.error)
         }
       }
     })
@@ -180,6 +183,8 @@ export class Bluetooth extends BluetoothEventEmitter {
         console.info('Disconnected from target device:', device.id, device.name)
         this.scannedDevices = []
         this.connectedDevice = null
+        this.sendingMessage = false
+        this.messagesQueue = []
         this.emit('deviceDisconnected')
         this.connectingToTargetDevice = false
         this.emit('connectingToTargetDevice', false)
@@ -210,8 +215,18 @@ export class Bluetooth extends BluetoothEventEmitter {
     if (!this.connectedDevice) {
       throw new Error('Device not connected')
     }
+
+    if (this.sendingMessage) {
+      this.messagesQueue.push(message)
+      return
+    }
+
+    this.sendingMessage = true
+
     if (!(await this.connectedDevice.isConnected())) {
       this.connectedDevice = null
+      this.sendingMessage = false
+      this.messagesQueue = []
       this.emit('deviceDisconnected')
       throw new Error('Device not connected')
     }
@@ -224,17 +239,26 @@ export class Bluetooth extends BluetoothEventEmitter {
 
     const characteristics =
       await this.connectedDevice.characteristicsForService(targetService.uuid)
-    const writeableCharacteristic = characteristics.find(
+    const writeableCharacteristic = characteristics.findLast(
       (char) => char.isWritableWithoutResponse,
     )
     if (!writeableCharacteristic) {
       throw new Error('No characteristics found')
     }
 
-    await this.connectedDevice.writeCharacteristicWithoutResponseForService(
+    // await this.connectedDevice.writeCharacteristicWithoutResponseForService(
+    await this.connectedDevice.writeCharacteristicWithResponseForService(
       writeableCharacteristic.serviceUUID,
       writeableCharacteristic.uuid,
       parseMessageData(message),
     )
+
+    this.sendingMessage = false
+    if (this.messagesQueue.length > 0) {
+      const nextMessage = this.messagesQueue.shift()
+      if (nextMessage) {
+        await this.sendMessage(nextMessage)
+      }
+    }
   }
 }

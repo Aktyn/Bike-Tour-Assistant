@@ -6,7 +6,7 @@ import { tryParseJSON } from '../utils'
 const defaultSettings = {
   lightness: 100,
   gpxFile: null as null | DocumentPickerSuccessResult,
-  // mapZoom: 16, //TODO
+  mapZoom: 16,
   // gpsAccuracy: LocationAccuracy.Highest, //TODO
   /** Minimum time to wait between each update in milliseconds. Default value may depend on accuracy option. */
   // gpsTimeInterval: 4000, //TODO

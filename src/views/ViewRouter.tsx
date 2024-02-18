@@ -39,11 +39,13 @@ export const ViewRouter = () => {
     if (view === VIEW.DEBUG) {
       return
     }
-    DeviceInfo.isEmulator().then((emulator) => {
-      if (emulator) {
-        setView(VIEW.DEBUG)
-      }
-    })
+    DeviceInfo.isEmulator()
+      .then((emulator) => {
+        if (emulator) {
+          setView(VIEW.DEBUG)
+        }
+      })
+      .catch(console.error)
   }, [view])
 
   useEffect(() => {

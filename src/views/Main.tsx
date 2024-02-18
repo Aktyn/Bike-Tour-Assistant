@@ -7,30 +7,30 @@ import { useCore } from '../context/coreContext'
 import { MessageType } from '../core/message'
 import { useCoreEvent } from '../hooks/useCoreEvent'
 
+const minMapZoom = 2
+const maxMapZoom = 19
+
 export const Main = () => {
   const theme = useTheme()
   const { deviceSettings, bluetooth } = useCore()
 
   const [lightness, setLightness] = useState(deviceSettings.get('lightness'))
   const [gpxFile, setGpxFile] = useState(deviceSettings.get('gpxFile'))
+  const [mapZoom, setMapZoom] = useState(deviceSettings.get('mapZoom'))
 
   useCoreEvent(deviceSettings, 'change', (settings, key) => {
     switch (key) {
       case 'lightness':
         setLightness(settings.lightness)
         break
+      case 'mapZoom':
+        setMapZoom(settings.mapZoom)
+        break
       case 'gpxFile':
         setGpxFile(settings.gpxFile)
         break
     }
   })
-
-  const handleLightnessChange = useCallback(
-    (value: number) => {
-      deviceSettings.set('lightness', value)
-    },
-    [deviceSettings],
-  )
 
   const selectTourFile = useCallback(() => {
     DocumentPicker.getDocumentAsync({
@@ -63,11 +63,12 @@ export const Main = () => {
           Display lightness: {Math.floor(lightness)}%
         </Text>
         <Slider
-          style={{ width: '100%', height: 40 }}
+          style={{ width: '100%', height: 40, marginTop: -24 }}
+          step={1}
           minimumValue={0}
           maximumValue={100}
           value={lightness}
-          onValueChange={handleLightnessChange}
+          onValueChange={(value) => deviceSettings.set('lightness', value)}
         />
         {/* TODO: switch to enable auto lightness (based on sunrise/sundawn time in current location) */}
         <Divider />
@@ -93,6 +94,35 @@ export const Main = () => {
           Select tour file
         </Button>
         <Divider />
+        <View style={styles.horizontalView}>
+          <Text variant="bodyLarge">Map zoom: {mapZoom}</Text>
+          <View style={styles.horizontalView}>
+            <IconButton
+              icon="minus"
+              iconColor={theme.colors.onSurface}
+              size={24}
+              disabled={mapZoom <= minMapZoom}
+              onPress={() => deviceSettings.set('mapZoom', mapZoom - 1)}
+            />
+            <IconButton
+              icon="plus"
+              iconColor={theme.colors.onSurface}
+              size={24}
+              disabled={mapZoom >= maxMapZoom}
+              onPress={() => deviceSettings.set('mapZoom', mapZoom + 1)}
+            />
+          </View>
+        </View>
+        <Slider
+          style={{ width: '100%', height: 40, marginTop: -24 }}
+          step={1}
+          minimumValue={minMapZoom}
+          maximumValue={maxMapZoom}
+          value={mapZoom}
+          onValueChange={(value) => deviceSettings.set('mapZoom', value)}
+        />
+        <Divider />
+        {/* TODO: option for displaying map preview */}
         <Button
           dark
           mode="contained"

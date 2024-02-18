@@ -4,7 +4,6 @@ import { Core } from './core'
 import { Config } from '../config'
 
 TaskManager.defineTask(
-  //NOTE: taskName is not put into exported variable to prevent circular imports
   Config.GPS_TASK_NAME,
   async ({ data, error }: TaskManager.TaskManagerTaskBody) => {
     if (error) {

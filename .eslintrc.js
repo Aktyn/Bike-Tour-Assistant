@@ -1,5 +1,4 @@
 module.exports = {
-  parser: '@typescript-eslint/parser',
   extends: [
     'eslint:recommended',
     'plugin:jest/recommended',
@@ -11,6 +10,7 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:import/typescript',
   ],
+  parser: '@typescript-eslint/parser',
   plugins: [
     'react',
     'react-native',
@@ -19,6 +19,7 @@ module.exports = {
     'import',
   ],
   parserOptions: {
+    project: './tsconfig.json',
     ecmaVersion: 2018,
     sourceType: 'module',
     ecmaFeatures: {
@@ -55,7 +56,7 @@ module.exports = {
   rules: {
     'no-shadow': 'off',
     'no-alert': ['off'],
-    '@typescript-eslint/consistent-type-imports': 'error',
+    'no-void': ['off'],
     '@typescript-eslint/no-shadow': ['error'],
     '@typescript-eslint/no-extra-semi': ['off'],
     '@typescript-eslint/no-empty-interface': ['off'],
@@ -72,6 +73,20 @@ module.exports = {
       },
     ],
     '@typescript-eslint/indent': [0],
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      {
+        prefer: 'type-imports',
+        fixStyle: 'inline-type-imports',
+      },
+    ],
+    'import/no-duplicates': [
+      'error',
+      {
+        'prefer-inline': true,
+      },
+    ],
     'import/default': 0,
     'import/extensions': 0,
     'import/named': 0,

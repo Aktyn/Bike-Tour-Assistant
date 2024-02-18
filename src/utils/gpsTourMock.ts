@@ -1,6 +1,6 @@
-import type { Coordinates } from '../core/gps'
+import type { LocationState } from '../core/gps'
 
-export const locations: Coordinates[] = [
+export const locations: LocationState[] = [
   {
     heading: 180,
     latitude: 51.7770983,
@@ -2079,5 +2079,12 @@ export const locations: Coordinates[] = [
     longitude: 19.4392921,
     speed: 5.796072959899902,
     timestamp: 1708200512177,
+  },
+  {
+    heading: 343.14715576171875,
+    latitude: 51.8218242,
+    longitude: 19.4392902,
+    speed: 5.767387866973877,
+    timestamp: 1708200516174,
   },
 ]
