@@ -10,4 +10,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 build/
+
+cmake-build-debug/
 photos/
+.idea/

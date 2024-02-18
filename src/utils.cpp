@@ -144,3 +144,95 @@ uint16_t findNextPowerOf2(uint16_t n)
 
   return 1 << count;
 }
+
+float bytesToFloat(uint8_t *bytes, bool big_endian)
+{
+  float f;
+  uint8_t *f_ptr = (uint8_t *)&f;
+  if (big_endian)
+  {
+    f_ptr[3] = bytes[0];
+    f_ptr[2] = bytes[1];
+    f_ptr[1] = bytes[2];
+    f_ptr[0] = bytes[3];
+  }
+  else
+  {
+    f_ptr[3] = bytes[3];
+    f_ptr[2] = bytes[2];
+    f_ptr[1] = bytes[1];
+    f_ptr[0] = bytes[0];
+  }
+  return f;
+}
+
+uint16_t bytesToUint16(uint8_t *bytes, bool big_endian)
+{
+  uint16_t i;
+  uint8_t *i_ptr = (uint8_t *)&i;
+  if (big_endian)
+  {
+    i_ptr[1] = bytes[0];
+    i_ptr[0] = bytes[1];
+  }
+  else
+  {
+    i_ptr[1] = bytes[1];
+    i_ptr[0] = bytes[0];
+  }
+  return i;
+}
+
+uint32_t bytesToUint32(uint8_t *bytes, bool big_endian)
+{
+  uint32_t i;
+  uint8_t *i_ptr = (uint8_t *)&i;
+  if (big_endian)
+  {
+    i_ptr[3] = bytes[0];
+    i_ptr[2] = bytes[1];
+    i_ptr[1] = bytes[2];
+    i_ptr[0] = bytes[3];
+  }
+  else
+  {
+    i_ptr[3] = bytes[3];
+    i_ptr[2] = bytes[2];
+    i_ptr[1] = bytes[1];
+    i_ptr[0] = bytes[0];
+  }
+  return i;
+}
+
+uint64_t bytesToUint64(uint8_t *bytes, bool big_endian)
+{
+  uint64_t i;
+  uint8_t *i_ptr = (uint8_t *)&i;
+  if (big_endian)
+  {
+    i_ptr[7] = bytes[0];
+    i_ptr[6] = bytes[1];
+    i_ptr[5] = bytes[2];
+    i_ptr[4] = bytes[3];
+    i_ptr[3] = bytes[4];
+    i_ptr[2] = bytes[5];
+    i_ptr[1] = bytes[6];
+    i_ptr[0] = bytes[7];
+  }
+  else
+  {
+    i_ptr[7] = bytes[7];
+    i_ptr[6] = bytes[6];
+    i_ptr[5] = bytes[5];
+    i_ptr[4] = bytes[4];
+    i_ptr[3] = bytes[3];
+    i_ptr[2] = bytes[2];
+    i_ptr[1] = bytes[1];
+    i_ptr[0] = bytes[0];
+  }
+  return i;
+}
+
+float metersPerSecondToKmPerHour(float metersPerSecond) {
+  return metersPerSecond * 3.6;
+}

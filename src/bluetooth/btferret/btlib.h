@@ -105,8 +105,8 @@ int find_ctic_index(int node, int flag, unsigned char *uuid);
 
 int hid_key_code(int key);
 
-int init_blue(char *filename);
-int init_blue_ex(char *filename, int hcin);
+int init_blue(const char *filename);
+int init_blue_ex(const char *filename, int hcin);
 int init_btle(char *name, int hcin);
 
 int keys_to_callback(int flag, int keyboard);

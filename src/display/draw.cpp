@@ -32,9 +32,9 @@ uint16_t *allocateImageBuffer(uint16_t width, uint16_t height)
 uint16_t *allocateImageBufferFromBitmapFile(const char *path, uint16_t width, uint16_t height)
 {
   uint16_t *image = allocateImageBuffer(width, height);
-  if (image == NULL)
+  if (image == nullptr)
   {
-    return NULL;
+    return nullptr;
   }
 
   Paint_NewImage(image, width, height, 0, WHITE, 24);
@@ -58,13 +58,13 @@ void drawImageBuffer(const uint16_t *image, uint16_t x, uint16_t y, uint16_t wid
 void drawImageFromBitmapFile(const char *path, uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
   uint16_t *image = allocateImageBufferFromBitmapFile(path, width, height);
-  if (image == NULL)
+  if (image == nullptr)
   {
     return;
   }
   drawImageBuffer(image, x, y, width, height);
   free(image);
-  image = NULL;
+  image = nullptr;
 }
 
 int drawImageFromJpgFile(const char *path, uint16_t x, uint16_t y, uint16_t target_width)

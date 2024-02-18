@@ -12,6 +12,7 @@ set(DIR_EPD "./lib/LCD")
 set(DIR_DISPLAY "./src/display")
 set(DIR_BLUETOOTH "./src/bluetooth")
 set(DIR_CAMERA "./src/camera")
+set(DIR_CORE "./src/core")
 
 set(C_INCLUDE_DIRECTORIES
     ${DIR_Config}
@@ -31,6 +32,7 @@ file(GLOB common_sources "./src/*.cpp")
 file(GLOB DIR_DISPLAY_sources "${DIR_DISPLAY}/*.cpp")
 file(GLOB DIR_BLUETOOTH_sources "${DIR_BLUETOOTH}/*.cpp")
 file(GLOB DIR_CAMERA_sources "${DIR_CAMERA}/*.cpp")
+file(GLOB DIR_CORE_sources "${DIR_CORE}/*.cpp")
 
 # Define source files using glob functions
 set(C_SOURCES
@@ -47,6 +49,8 @@ set(CXX_SOURCES
     ${DIR_DISPLAY_sources}
     ${DIR_BLUETOOTH_sources}
     ${DIR_CAMERA_sources}
+    ${DIR_CORE_sources}
+        src/core/common.h
 )
 
 add_executable(BikeTourAssistant ${C_SOURCES} ${CXX_SOURCES})

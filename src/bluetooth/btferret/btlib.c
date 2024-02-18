@@ -1209,12 +1209,12 @@ int init_btle(char *name, int hcin)
   return (retval);
 }
 
-int init_blue(char *filename)
+int init_blue(const char *filename)
 {
   return (init_blue_ex(filename, 0)); // hci0
 }
 
-int init_blue_ex(char *filename, int hcin)
+int init_blue_ex(const char *filename, int hcin)
 {
   int n, dn, k, sn, hn, i, len, flag, errflag, errcount, psnx;
   int clflag, leflag, readret, meshcount, lecap, btleindex, reportflag;

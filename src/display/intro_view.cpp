@@ -2,7 +2,7 @@
 
 #include "loader.h"
 #include "draw.h"
-#include "../core.h"
+#include "core/core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
