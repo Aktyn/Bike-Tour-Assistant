@@ -11,6 +11,7 @@ set(DIR_EPD "./lib/LCD")
 
 set(DIR_DISPLAY "./src/display")
 set(DIR_BLUETOOTH "./src/bluetooth")
+set(DIR_LODEPNG "./src/lodepng")
 set(DIR_CAMERA "./src/camera")
 set(DIR_CORE "./src/core")
 
@@ -31,6 +32,7 @@ file(GLOB DIR_EPD_sources "${DIR_EPD}/*.c")
 file(GLOB common_sources "./src/*.cpp")
 file(GLOB DIR_DISPLAY_sources "${DIR_DISPLAY}/*.cpp")
 file(GLOB DIR_BLUETOOTH_sources "${DIR_BLUETOOTH}/*.cpp")
+file(GLOB DIR_LODEPNG_sources "${DIR_LODEPNG}/*.cpp")
 file(GLOB DIR_CAMERA_sources "${DIR_CAMERA}/*.cpp")
 file(GLOB DIR_CORE_sources "${DIR_CORE}/*.cpp")
 
@@ -48,9 +50,9 @@ set(CXX_SOURCES
     ${common_sources}
     ${DIR_DISPLAY_sources}
     ${DIR_BLUETOOTH_sources}
+    ${DIR_LODEPNG_sources}
     ${DIR_CAMERA_sources}
     ${DIR_CORE_sources}
-        src/core/common.h
 )
 
 add_executable(BikeTourAssistant ${C_SOURCES} ${CXX_SOURCES})

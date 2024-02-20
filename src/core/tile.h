@@ -18,6 +18,7 @@ public:
     return std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
   }
 
+  const std::string key;
   const uint32_t x;
   const uint32_t y;
   const uint32_t z;

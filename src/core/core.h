@@ -17,7 +17,6 @@ extern "C"
 #define MAP_HEIGHT LCD_2IN4_WIDTH
 
 
-
 class Core {
 public:
   Core(const Core &) = delete;
@@ -45,8 +44,6 @@ public:
   void registerIndexedColor(uint16_t colorIndex, uint8_t red, uint8_t green, uint8_t blue);
 
   void appendTileImageData(uint16_t chunkIndex, uint8_t *data);
-
-  void finalizeTile(uint32_t x, uint32_t y, uint32_t z);
 
   void updateLocation(float latitude, float longitude, float speed, float heading, uint64_t timestamp);
 

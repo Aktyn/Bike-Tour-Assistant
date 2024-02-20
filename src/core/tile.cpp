@@ -7,7 +7,7 @@ Tile::Tile(uint32_t x, uint32_t y, uint32_t z,
            uint32_t dataByteLength, uint16_t paletteSize)
     : x(x), y(y), z(z),
       tileWidth(tileWidth), tileHeight(tileHeight),
-      dataByteLength(dataByteLength), paletteSize(paletteSize) {
+      dataByteLength(dataByteLength), paletteSize(paletteSize), key(Tile::getTileKey(x, y, z)) {
 
   this->loadedByteLength = 0;
 

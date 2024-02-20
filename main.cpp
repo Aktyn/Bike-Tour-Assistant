@@ -5,6 +5,7 @@
 #include "camera/camera.h"
 #include "core/core.h"
 #include "utils.h"
+#include "pngUtils.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -54,8 +55,8 @@ void *displayThread(void *args) {
         std::string speedText = std::to_string((uint16_t) std::round(CORE.location.speed));
         //TODO: draw digits from bitmap files (cache loaded buffers)
         drawLine(speedText.c_str(),
-                 0, (LCD_2IN4_HEIGHT - MAP_HEIGHT) / 2 - Font24.Height / 2, LCD_2IN4_WIDTH,
-                 WHITE, BLACK, &Font24, ALIGN_CENTER);
+                 0, (LCD_2IN4_HEIGHT - MAP_HEIGHT) / 2 - Font50.Height / 2, LCD_2IN4_WIDTH,
+                 WHITE, BLACK, &Font50, ALIGN_CENTER);
       }
 
       // sleep for 16ms
@@ -140,16 +141,7 @@ void handleMessage(unsigned char *data) {
       CORE.appendTileImageData(chunkIndex, data + 3);
     }
       break;
-    case 7: // SEND_MAP_TILE_END
-    {
-      uint32_t x = bytesToUint32(data + 1, false);
-      uint32_t y = bytesToUint32(data + 5, false);
-      uint32_t z = bytesToUint32(data + 9, false);
-      DEBUG("Map tile end: %d, %d, %d\n", x, y, z);
-      CORE.finalizeTile(x, y, z);
-    }
-      break;
-    case 8: //SEND_MAP_TILE_INDEXED_COLORS_BATCH_48
+    case 7: //SEND_MAP_TILE_INDEXED_COLORS_BATCH_48
     {
       for (int i = 0; i < 48; i++) {
         uint16_t colorIndex = bytesToUint16(data + 1 + i * 5, false);
@@ -176,6 +168,8 @@ int main() {
   signal(SIGINT, terminate);
 
   CORE.start();
+
+  parsePngData(); //TODO: remove after testing
 
   /* LCD module Init */
   if (DEV_ModuleInit() != 0) {

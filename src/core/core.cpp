@@ -58,19 +58,11 @@ void Core::appendTileImageData(uint16_t chunkIndex, uint8_t *data) {
   }
 
   this->fetchingTile->appendImageData(chunkIndex, data);
-}
 
-void Core::finalizeTile(uint32_t x, uint32_t y, uint32_t z) {
-  std::string key = Tile::getTileKey(x, y, z);
-  if (this->tiles.find(key) != this->tiles.end()) {
-    Tile *tile = this->tiles[key];
-    if (tile->isFullyLoaded() && tile == this->fetchingTile) {
-      std::cout << "Tile " << key << " is fully loaded" << std::endl;
-      this->fetchingTile = nullptr;
-      this->needMapRedraw = true;
-    } else {
-      std::cout << "Tile " << key << " is not fully loaded" << std::endl;
-    }
+  if (this->fetchingTile->isFullyLoaded()) {
+    std::cout << "Tile " << this->fetchingTile->key << " is fully loaded" << std::endl;
+    this->fetchingTile = nullptr;
+    this->needMapRedraw = true;
   }
 }
 
