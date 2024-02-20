@@ -22,14 +22,16 @@ declare interface MapProviderEventEmitter {
 class MapProviderEventEmitter extends EventEmitter {}
 
 export class MapProvider extends MapProviderEventEmitter {
-  private serverLetter = getRandomServerLetter()
-  private tileResolution = 256
+  private readonly tilesRadius = 1
+  private readonly tileResolution = 256
   //TODO: option for selecting tiles provider
-  private tilesProvider =
+  private readonly tilesProvider =
     'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
   // 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
   // https://wiki.openstreetmap.org/wiki/Raster_tile_providers
+
   private zoom = 16
+  private readonly serverLetter = getRandomServerLetter()
 
   private loadedTiles = new Map<TileURL, Tile>()
   private tilesToLoad = new Map<TileURL, Omit<Tile, 'image'>>()
@@ -50,7 +52,6 @@ export class MapProvider extends MapProviderEventEmitter {
   }
 
   reset() {
-    this.serverLetter = getRandomServerLetter()
     this.loadedTiles.clear()
     this.tilesToLoad.clear()
   }
@@ -58,6 +59,14 @@ export class MapProvider extends MapProviderEventEmitter {
   update(latitude: number, longitude: number) {
     const { x, y } = convertLatLongToTile(latitude, longitude, this.zoom)
 
+    for (let i = -this.tilesRadius; i <= this.tilesRadius; i++) {
+      for (let j = -this.tilesRadius; j <= this.tilesRadius; j++) {
+        this.loadTile(x + i, y + j)
+      }
+    }
+  }
+
+  private loadTile(x: number, y: number) {
     const url = this.tilesProvider
       .replace(/\{s\}/gi, this.serverLetter)
       .replace(/\{z\}/gi, this.zoom.toString())

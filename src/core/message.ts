@@ -10,7 +10,6 @@ export enum MessageType {
   LOCATION_UPDATE,
   SEND_MAP_TILE_START,
   SEND_MAP_TILE_DATA_CHUNK,
-  SEND_MAP_TILE_END,
   SEND_MAP_TILE_INDEXED_COLORS_BATCH_48,
 }
 
@@ -37,10 +36,6 @@ export type Message =
   | MessageBase<
       MessageType.SEND_MAP_TILE_DATA_CHUNK,
       { chunkIndex: number; bytes: ArrayBuffer }
-    >
-  | MessageBase<
-      MessageType.SEND_MAP_TILE_END,
-      { tileIdentifier: Omit<Tile, 'image'> }
     >
   | MessageBase<
       MessageType.SEND_MAP_TILE_INDEXED_COLORS_BATCH_48,
@@ -101,12 +96,6 @@ export function parseMessageData(message: Message) {
           buffer.writeUInt8(uint8Array[i], 3 + i)
         }
       }
-      break
-    case MessageType.SEND_MAP_TILE_END:
-      buffer = Buffer.alloc(13)
-      buffer.writeUint32LE(message.data.tileIdentifier.x, 1)
-      buffer.writeUint32LE(message.data.tileIdentifier.y, 5)
-      buffer.writeUint32LE(message.data.tileIdentifier.z, 9)
       break
     case MessageType.SEND_MAP_TILE_INDEXED_COLORS_BATCH_48:
       buffer = Buffer.alloc(1 + message.data.length * 5)

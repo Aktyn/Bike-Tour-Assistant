@@ -1,17 +1,18 @@
 import EventEmitter from 'events'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { DocumentPickerSuccessResult } from 'expo-document-picker'
+import { LocationAccuracy } from 'expo-location'
 import { tryParseJSON } from '../utils'
 
 const defaultSettings = {
   lightness: 100,
   gpxFile: null as null | DocumentPickerSuccessResult,
   mapZoom: 16,
-  // gpsAccuracy: LocationAccuracy.Highest, //TODO
+  gpsAccuracy: LocationAccuracy.BestForNavigation,
   /** Minimum time to wait between each update in milliseconds. Default value may depend on accuracy option. */
-  // gpsTimeInterval: 4000, //TODO
+  gpsTimeInterval: 4000,
   /** Receive updates only when the location has changed by at least this distance in meters. Default value may depend on accuracy option. */
-  // gpsDistanceSensitivity: 10, //TODO
+  gpsDistanceSensitivity: 10,
 }
 
 export type DeviceSettingsSchema = typeof defaultSettings

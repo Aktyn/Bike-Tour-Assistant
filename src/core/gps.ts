@@ -1,6 +1,6 @@
 import EventEmitter from 'events'
 import * as Location from 'expo-location'
-import { LocationAccuracy, type LocationObject } from 'expo-location'
+import { type LocationObject } from 'expo-location'
 import { requestBackgroundLocationPermissions } from './common'
 import type { DeviceSettingsSchema } from './deviceSettings'
 import { Config } from '../config'
@@ -30,9 +30,9 @@ declare interface GPSEventEmitter {
   ): this
   emit(event: 'locationUpdate', coordinates: LocationState): boolean
 
-  // on(event: 'toggleGranted', listener: (granted: boolean) => void): this
-  // off(event: 'toggleGranted', listener: (granted: boolean) => void): this
-  //   emit(event: 'toggleGranted', granted: boolean): boolean
+  on(event: 'toggleGranted', listener: (granted: boolean) => void): this
+  off(event: 'toggleGranted', listener: (granted: boolean) => void): this
+  emit(event: 'toggleGranted', granted: boolean): boolean
 }
 
 class GPSEventEmitter extends EventEmitter {}
@@ -80,14 +80,12 @@ export class GPS extends GPSEventEmitter {
     this.emit('locationUpdate', this.locationState)
   }
 
-  async startObservingLocation(_settings: DeviceSettingsSchema) {
-    //TODO
-    // const accuracy = settings.gpsAccuracy
-    // const gpsTimeInterval = settings.gpsTimeInterval
-    // const gpsDistanceSensitivity = settings.gpsDistanceSensitivity
-    const accuracy = LocationAccuracy.BestForNavigation
-    const gpsTimeInterval = 1000
-    const gpsDistanceSensitivity = 1
+  async startObservingLocation(settings: DeviceSettingsSchema) {
+    const {
+      gpsAccuracy: accuracy,
+      gpsTimeInterval,
+      gpsDistanceSensitivity,
+    } = settings
 
     this.locationObservingOptions = {
       accuracy,
@@ -96,6 +94,7 @@ export class GPS extends GPSEventEmitter {
     }
 
     const granted = await this.requestPermissions()
+    this.emit('toggleGranted', granted)
     if (!granted) {
       console.error('GPS permission not granted')
       //TODO: show toast with error

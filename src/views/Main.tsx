@@ -1,8 +1,17 @@
 import { useCallback, useState } from 'react'
 import Slider from '@react-native-community/slider'
 import * as DocumentPicker from 'expo-document-picker'
+import { LocationAccuracy } from 'expo-location'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { Button, Divider, IconButton, Text, useTheme } from 'react-native-paper'
+import {
+  Button,
+  Divider,
+  IconButton,
+  RadioButton,
+  Text,
+  TextInput,
+  useTheme,
+} from 'react-native-paper'
 import { useCore } from '../context/coreContext'
 import { MessageType } from '../core/message'
 import { useCoreEvent } from '../hooks/useCoreEvent'
@@ -12,11 +21,22 @@ const maxMapZoom = 19
 
 export const Main = () => {
   const theme = useTheme()
-  const { deviceSettings, bluetooth } = useCore()
+  const { deviceSettings, bluetooth, gps } = useCore()
 
   const [lightness, setLightness] = useState(deviceSettings.get('lightness'))
   const [gpxFile, setGpxFile] = useState(deviceSettings.get('gpxFile'))
   const [mapZoom, setMapZoom] = useState(deviceSettings.get('mapZoom'))
+  const [gpsAccuracy, setGpsAccuracy] = useState(
+    deviceSettings.get('gpsAccuracy'),
+  )
+  const [gpsTimeInterval, setGpsTimeInterval] = useState(
+    deviceSettings.get('gpsTimeInterval'),
+  )
+  const [gpsDistanceSensitivity, setGpsDistanceSensitivity] = useState(
+    deviceSettings.get('gpsDistanceSensitivity'),
+  )
+  const [locationPermissionsGranted, setLocationPermissionsGranted] =
+    useState(true)
 
   useCoreEvent(deviceSettings, 'change', (settings, key) => {
     switch (key) {
@@ -29,8 +49,19 @@ export const Main = () => {
       case 'gpxFile':
         setGpxFile(settings.gpxFile)
         break
+      case 'gpsAccuracy':
+        setGpsAccuracy(settings.gpsAccuracy)
+        break
+      case 'gpsTimeInterval':
+        setGpsTimeInterval(settings.gpsTimeInterval)
+        break
+      case 'gpsDistanceSensitivity':
+        setGpsDistanceSensitivity(settings.gpsDistanceSensitivity)
+        break
     }
   })
+
+  useCoreEvent(gps, 'toggleGranted', setLocationPermissionsGranted)
 
   const selectTourFile = useCallback(() => {
     DocumentPicker.getDocumentAsync({
@@ -54,7 +85,9 @@ export const Main = () => {
 
   return (
     <View style={styles.container}>
-      <Text variant="titleLarge">Bike Tour Assistant</Text>
+      <Text variant="titleLarge" style={{ fontWeight: 'bold' }}>
+        Bike Tour Assistant
+      </Text>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
@@ -71,6 +104,7 @@ export const Main = () => {
           onValueChange={(value) => deviceSettings.set('lightness', value)}
         />
         {/* TODO: switch to enable auto lightness (based on sunrise/sundawn time in current location) */}
+
         <Divider />
         {gpxFile ? (
           <View style={styles.horizontalView}>
@@ -93,6 +127,7 @@ export const Main = () => {
         >
           Select tour file
         </Button>
+
         <Divider />
         <View style={styles.horizontalView}>
           <Text variant="bodyLarge">Map zoom: {mapZoom}</Text>
@@ -121,8 +156,58 @@ export const Main = () => {
           value={mapZoom}
           onValueChange={(value) => deviceSettings.set('mapZoom', value)}
         />
+
         <Divider />
-        {/* TODO: option for displaying map preview */}
+        <TextInput
+          mode="outlined"
+          label="GPS location updates interval (milliseconds)"
+          value={gpsTimeInterval.toString()}
+          right={<TextInput.Affix text="milliseconds" />}
+          left={<TextInput.Icon icon="map-clock" />}
+          maxLength={9}
+          keyboardType="numeric"
+          onChangeText={(value) => {
+            const parsedValue = parseInt(removeNonNumericCharacters(value), 10)
+            if (isNaN(parsedValue) || parsedValue < 1) return
+            deviceSettings.set('gpsTimeInterval', parsedValue)
+          }}
+        />
+
+        <Divider />
+        <TextInput
+          mode="outlined"
+          label="GPS distance sensitivity (meters)"
+          value={gpsDistanceSensitivity.toString()}
+          right={<TextInput.Affix text="meters" />}
+          left={<TextInput.Icon icon="map-marker-distance" />}
+          maxLength={3}
+          keyboardType="numeric"
+          onChangeText={(value) => {
+            const parsedValue = parseInt(removeNonNumericCharacters(value), 10)
+            if (isNaN(parsedValue) || parsedValue < 0) return
+            deviceSettings.set('gpsDistanceSensitivity', parsedValue)
+          }}
+        />
+
+        <Divider />
+        <Text variant="bodyLarge">GPS accuracy</Text>
+        {accuracies.map((accuracy) => (
+          <View key={accuracy.value} style={styles.gpsAccuracyRadioRow}>
+            <RadioButton
+              key={accuracy.value}
+              value={accuracy.value.toString()}
+              status={gpsAccuracy === accuracy.value ? 'checked' : 'unchecked'}
+              onPress={() => deviceSettings.set('gpsAccuracy', accuracy.value)}
+            />
+            <Text
+              onPress={() => deviceSettings.set('gpsAccuracy', accuracy.value)}
+            >
+              {accuracy.label}
+            </Text>
+          </View>
+        ))}
+
+        <Divider />
         <Button
           dark
           mode="contained"
@@ -135,6 +220,33 @@ export const Main = () => {
         >
           Take photo
         </Button>
+        {!locationPermissionsGranted && (
+          <>
+            <Divider />
+            <Text
+              style={{
+                color: theme.colors.onError,
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}
+              variant="bodyLarge"
+            >
+              Location permission has not been granted or GPS is disabled!!!
+            </Text>
+            <Button
+              dark
+              mode="contained"
+              icon="restart"
+              onPress={() =>
+                gps
+                  .startObservingLocation(deviceSettings.getSettings())
+                  .catch(console.error)
+              }
+            >
+              Restart observing location
+            </Button>
+          </>
+        )}
       </ScrollView>
       <Button
         dark
@@ -179,4 +291,21 @@ const styles = StyleSheet.create({
     width: '100%',
     textAlign: 'right',
   },
+  gpsAccuracyRadioRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 })
+
+const removeNonNumericCharacters = (value: string) =>
+  value.replace(/[^\d,.]/g, '')
+
+const accuracies = [
+  { label: 'BestForNavigation', value: LocationAccuracy.BestForNavigation },
+  { label: 'Highest', value: LocationAccuracy.Highest },
+  { label: 'High', value: LocationAccuracy.High },
+  { label: 'Balanced', value: LocationAccuracy.Balanced },
+  { label: 'Low', value: LocationAccuracy.Low },
+  { label: 'Lowest', value: LocationAccuracy.Lowest },
+]

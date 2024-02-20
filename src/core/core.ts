@@ -1,5 +1,5 @@
 import BackgroundTimer, { type TimeoutId } from 'react-native-background-timer'
-import { Bluetooth } from './bluetooth'
+import { Bluetooth, MessagePriority } from './bluetooth'
 import { DeviceSettings } from './deviceSettings'
 import { GPS, type LocationState } from './gps'
 import { MapProvider, type Tile } from './mapProvider'
@@ -94,25 +94,17 @@ export class Core {
         this.mapProvider.setZoom(settings.mapZoom)
       }
 
-      //TODO: gps.startObservingLocation(deviceSettings.getSettings()) when location settings change
+      if (
+        key === 'gpsAccuracy' ||
+        key === 'gpsTimeInterval' ||
+        key === 'gpsDistanceSensitivity'
+      ) {
+        this.gps.startObservingLocation(settings).catch(console.error)
+      }
     })
 
     this.gps.on('locationUpdate', this.handleLocationUpdate.bind(this))
     this.mapProvider.on('tileLoaded', async (tile) => {
-      //TODO: remove
-      console.log(
-        'Tile loaded',
-        tile.x,
-        tile.y,
-        tile.z,
-        tile.image.width,
-        tile.image.height,
-        tile.image.data.buffer.byteLength,
-        tile.image.depth,
-        tile.image.channels,
-        tile.image.palette?.length,
-      )
-
       void this.sendMapTile(tile)
     })
   }
@@ -157,16 +149,19 @@ export class Core {
 
       const palette = tile.image.palette ?? []
 
-      await this.bluetooth.sendMessage({
-        type: MessageType.SEND_MAP_TILE_START,
-        data: {
-          tileIdentifier,
-          tileWidth: tile.image.width,
-          tileHeight: tile.image.height,
-          dataByteLength: tile.image.data.buffer.byteLength,
-          paletteSize: palette.length,
+      await this.bluetooth.sendMessage(
+        {
+          type: MessageType.SEND_MAP_TILE_START,
+          data: {
+            tileIdentifier,
+            tileWidth: tile.image.width,
+            tileHeight: tile.image.height,
+            dataByteLength: tile.image.data.buffer.byteLength,
+            paletteSize: palette.length,
+          },
         },
-      })
+        MessagePriority.VERY_LOW,
+      )
 
       const colorsBatchSize = 48
 
@@ -186,10 +181,13 @@ export class Core {
           })
         }
 
-        await this.bluetooth.sendMessage({
-          type: MessageType.SEND_MAP_TILE_INDEXED_COLORS_BATCH_48,
-          data,
-        })
+        await this.bluetooth.sendMessage(
+          {
+            type: MessageType.SEND_MAP_TILE_INDEXED_COLORS_BATCH_48,
+            data,
+          },
+          MessagePriority.VERY_LOW,
+        )
       }
 
       const chunkSize = 224 //224 (max message length) - 1 byte for message type - 2 bytes for chunk index
@@ -212,20 +210,17 @@ export class Core {
         const bytes = tile.image.data.buffer.slice(start, end)
 
         try {
-          //TODO: send with lower priority
-          await this.bluetooth.sendMessage({
-            type: MessageType.SEND_MAP_TILE_DATA_CHUNK,
-            data: { chunkIndex: c, bytes },
-          })
+          await this.bluetooth.sendMessage(
+            {
+              type: MessageType.SEND_MAP_TILE_DATA_CHUNK,
+              data: { chunkIndex: c, bytes },
+            },
+            MessagePriority.VERY_LOW,
+          )
         } catch (error) {
           console.error('Failed to send map tile chunk:', c)
         }
       }
-
-      await this.bluetooth.sendMessage({
-        type: MessageType.SEND_MAP_TILE_END,
-        data: { tileIdentifier },
-      })
     } catch (error) {
       console.error('Failed to send map tile', error)
     }

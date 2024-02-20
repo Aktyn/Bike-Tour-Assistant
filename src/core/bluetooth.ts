@@ -3,6 +3,15 @@ import { BleManager, State, type Device } from 'react-native-ble-plx'
 import { requestBluetoothPermission } from './common'
 import { parseMessageData, type Message } from './message'
 import { Config } from '../config'
+import { wait } from '../utils'
+
+export enum MessagePriority {
+  VERY_LOW = 0,
+  LOW = 1,
+  NORMAL = 2,
+  HIGH = 3,
+  VERY_HIGH = 4,
+}
 
 declare interface BluetoothEventEmitter {
   on(event: 'deviceDiscovered', listener: (device: Device) => void): this
@@ -47,7 +56,7 @@ export class Bluetooth extends BluetoothEventEmitter {
   private scanning = false
   private connectingToTargetDevice = false
   private sendingMessage = false
-  private messagesQueue: Message[] = []
+  private messagesQueue: { message: Message; priority: number }[] = []
 
   constructor() {
     super()
@@ -211,13 +220,15 @@ export class Bluetooth extends BluetoothEventEmitter {
   }
 
   //TODO: handle errors, optimize loading services and characteristics
-  async sendMessage(message: Message) {
+  async sendMessage(message: Message, priority = MessagePriority.NORMAL) {
     if (!this.connectedDevice) {
       throw new Error('Device not connected')
     }
 
     if (this.sendingMessage) {
-      this.messagesQueue.push(message)
+      this.messagesQueue = [...this.messagesQueue, { message, priority }].sort(
+        (a, b) => b.priority - a.priority,
+      )
       return
     }
 
@@ -246,18 +257,22 @@ export class Bluetooth extends BluetoothEventEmitter {
       throw new Error('No characteristics found')
     }
 
+    const messageData = parseMessageData(message)
+
     // await this.connectedDevice.writeCharacteristicWithoutResponseForService(
     await this.connectedDevice.writeCharacteristicWithResponseForService(
       writeableCharacteristic.serviceUUID,
       writeableCharacteristic.uuid,
-      parseMessageData(message),
+      messageData,
     )
+
+    await wait(Math.max(1, Math.min(32, messageData.length)))
 
     this.sendingMessage = false
     if (this.messagesQueue.length > 0) {
       const nextMessage = this.messagesQueue.shift()
       if (nextMessage) {
-        await this.sendMessage(nextMessage)
+        await this.sendMessage(nextMessage.message, nextMessage.priority)
       }
     }
   }
