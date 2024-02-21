@@ -3,14 +3,13 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 #define TILE_CHUNK_SIZE 224
 
 class Tile {
 public:
-  Tile(uint32_t x, uint32_t y, uint32_t z,
-       uint16_t tileWidth, uint16_t tileHeight,
-       uint32_t dataByteLength, uint16_t paletteSize);
+  Tile(uint32_t x, uint32_t y, uint32_t z, uint32_t dataByteLength);
 
   ~Tile();
 
@@ -22,14 +21,13 @@ public:
   const uint32_t x;
   const uint32_t y;
   const uint32_t z;
-  const uint16_t tileWidth;
-  const uint16_t tileHeight;
+  uint16_t tileWidth;
+  uint16_t tileHeight;
   const uint32_t dataByteLength;
-  const uint16_t paletteSize;
-  uint8_t *imageData;
-  uint16_t *palette;
+  uint8_t *pngData;
+  std::vector<uint8_t> imageData;
 
-  void appendImageData(uint16_t chunkIndex, uint8_t *data);
+  void appendPngData(uint16_t chunkIndex, uint8_t *data);
 
   bool isFullyLoaded() const;
 

@@ -3,17 +3,11 @@
 
 #include <iostream>
 
-void parsePngData() {
-  //TODO: use std::vector<unsigned char> png; instead of filename
-  std::vector<unsigned char> image; //the raw pixels
+std::tuple<uint16_t, uint16_t> parsePngData(std::vector<uint8_t> &outData, uint8_t *pngData, uint32_t pngDataLength) {
   unsigned width, height;
-
-  //decode
-  unsigned error = lodepng::decode(image, width, height, "../assets/test_tile.png", LCT_RGB);
-
-  //if there's an error, display it
+  outData.clear();
+  unsigned error = lodepng::decode(outData, width, height, pngData, pngDataLength, LCT_RGB);
   if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
 
-  //the pixels are now in the vector "image", 4 bytes per pixel, ordered RGBARGBA..., use it as texture, draw it, ...
-  std::cout << "Image size: " << image.size() << std::endl;
+  return std::make_tuple(width, height);
 }

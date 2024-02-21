@@ -29,26 +29,17 @@ void Core::clearTiles() {
 }
 
 void
-Core::registerTile(uint32_t x, uint32_t y, uint32_t z, uint16_t tileWidth, uint16_t tileHeight, uint32_t dataByteLength,
-                   uint16_t paletteSize) {
+Core::registerTile(uint32_t x, uint32_t y, uint32_t z, uint32_t dataByteLength) {
   if (z != this->mapZoom) {
     // Discard loaded tiles if zoom level has changed
     this->clearTiles();
     this->mapZoom = z;
+    this->tour.setZoom(z);
   }
 
-  Tile *tile = new Tile(x, y, z, tileWidth, tileHeight, dataByteLength, paletteSize);
+  Tile *tile = new Tile(x, y, z, dataByteLength);
   this->tiles[Tile::getTileKey(x, y, z)] = tile;
   this->fetchingTile = tile;
-}
-
-void Core::registerIndexedColor(uint16_t colorIndex, uint8_t red, uint8_t green, uint8_t blue) {
-  if (this->fetchingTile == nullptr) {
-    std::cerr << "No fetching tile" << std::endl;
-    return;
-  }
-
-  this->fetchingTile->palette[colorIndex] = convertRgbColor(RGB(red, green, blue));
 }
 
 void Core::appendTileImageData(uint16_t chunkIndex, uint8_t *data) {
@@ -57,7 +48,7 @@ void Core::appendTileImageData(uint16_t chunkIndex, uint8_t *data) {
     return;
   }
 
-  this->fetchingTile->appendImageData(chunkIndex, data);
+  this->fetchingTile->appendPngData(chunkIndex, data);
 
   if (this->fetchingTile->isFullyLoaded()) {
     std::cout << "Tile " << this->fetchingTile->key << " is fully loaded" << std::endl;
@@ -90,7 +81,7 @@ uint16_t *Core::generateMap() {
   }
 
   Tile *tile = this->tiles.begin()->second;
-  if (!tile->isFullyLoaded()) {
+  if (!tile->isFullyLoaded() || tile->imageData.empty()) {
     return nullptr;
   }
 
@@ -99,18 +90,21 @@ uint16_t *Core::generateMap() {
     for (uint16_t x = 0; x < MAP_WIDTH; x++) {
       uint16_t index = (MAP_HEIGHT - 1 - y) * MAP_WIDTH + (MAP_WIDTH - 1 - x);
       uint16_t tileIndex = (y % tile->tileWidth) * tile->tileWidth + (x % tile->tileHeight);
-      uint8_t color = tile->imageData[tileIndex];
-      if (color < tile->paletteSize) {
-        buffer[index] = tile->palette[color];
-      } else if (color < 256) {
-        buffer[index] = convertRgbColor(RGB(color, color, color));
-      } else {
-        buffer[index] = convertRgbColor(RGB(0, 0, 0));
-      }
+      buffer[index] = convertRgbColor(
+          RGB(
+              tile->imageData[tileIndex * 3 + 0],
+              tile->imageData[tileIndex * 3 + 1],
+              tile->imageData[tileIndex * 3 + 2]
+          )
+      );
     }
   }
 
   return buffer; // buffer must be freed
+}
+
+uint8_t Core::getMapZoom() const {
+  return this->mapZoom;
 }
 
 bool isBluetoothDisconnected() {

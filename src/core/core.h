@@ -2,6 +2,7 @@
 #define CORE_H
 
 #include "tile.h"
+#include "tour.h"
 #include "common.h"
 
 #include <cstdint>
@@ -28,20 +29,19 @@ public:
     return instance;
   }
 
+  Tour tour;
+  Location location;
+
   bool isBluetoothConnected;
   bool isRunning;
 
   bool needMapRedraw;
   bool needSpeedRedraw;
-  Location location;
 
   void start();
 
   void
-  registerTile(uint32_t x, uint32_t y, uint32_t z, uint16_t tileWidth, uint16_t tileHeight, uint32_t dataByteLength,
-               uint16_t paletteSize);
-
-  void registerIndexedColor(uint16_t colorIndex, uint8_t red, uint8_t green, uint8_t blue);
+  registerTile(uint32_t x, uint32_t y, uint32_t z, uint32_t dataByteLength);
 
   void appendTileImageData(uint16_t chunkIndex, uint8_t *data);
 
@@ -49,6 +49,7 @@ public:
 
   uint16_t *generateMap();
 
+  uint8_t getMapZoom() const;
 
 private:
   Core();

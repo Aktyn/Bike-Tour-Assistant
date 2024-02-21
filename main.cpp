@@ -5,13 +5,10 @@
 #include "camera/camera.h"
 #include "core/core.h"
 #include "utils.h"
-#include "pngUtils.h"
 
-#include <cstdio>
 #include <cstdlib>
 #include <csignal> //signal()
 #include <pthread.h>
-#include <ctime>
 #include <iostream>
 #include <cmath>
 
@@ -116,7 +113,7 @@ void handleMessage(unsigned char *data) {
       float speed = bytesToFloat(data + 9, false);
       float heading = bytesToFloat(data + 13, false);
       uint64_t timestamp = bytesToUint64(data + 17, false);
-      DEBUG("Location: %f, %f, %f, %f, %lu\n", latitude, longitude, speed, heading, timestamp);
+      DEBUG("Location: %f, %f, %f, %f, %llu\n", latitude, longitude, speed, heading, timestamp);
       CORE.updateLocation(latitude, longitude, speed, heading, timestamp);
     }
       break;
@@ -125,13 +122,10 @@ void handleMessage(unsigned char *data) {
       uint32_t x = bytesToUint32(data + 1, false);
       uint32_t y = bytesToUint32(data + 5, false);
       uint32_t z = bytesToUint32(data + 9, false);
-      uint16_t tileWidth = bytesToUint16(data + 13, false);
-      uint16_t tileHeight = bytesToUint16(data + 15, false);
-      uint32_t dataByteLength = bytesToUint32(data + 17, false);
-      uint16_t paletteSize = bytesToUint16(data + 21, false);
-      DEBUG("Map tile start: %d, %d, %d, %d, %d, %d, %d\n",
-            x, y, z, tileWidth, tileHeight, dataByteLength, paletteSize);
-      CORE.registerTile(x, y, z, tileWidth, tileHeight, dataByteLength, paletteSize);
+      uint32_t dataByteLength = bytesToUint32(data + 13, false);
+      DEBUG("Map tile start: %u, %u, %u, %u\n",
+            x, y, z, dataByteLength);
+      CORE.registerTile(x, y, z, dataByteLength);
     }
       break;
     case 6: // SEND_MAP_TILE_DATA_CHUNK
@@ -141,15 +135,29 @@ void handleMessage(unsigned char *data) {
       CORE.appendTileImageData(chunkIndex, data + 3);
     }
       break;
-    case 7: //SEND_MAP_TILE_INDEXED_COLORS_BATCH_48
+    case 7: // CLEAR_TOUR_DATA
     {
-      for (int i = 0; i < 48; i++) {
-        uint16_t colorIndex = bytesToUint16(data + 1 + i * 5, false);
-        uint8_t red = data[3 + i * 5];
-        uint8_t green = data[4 + i * 5];
-        uint8_t blue = data[5 + i * 5];
-        DEBUG("Map tile indexed color: %d, %d, %d, %d\n", colorIndex, red, green, blue);
-        CORE.registerIndexedColor(colorIndex, red, green, blue);
+      DEBUG("Clearing tour data\n");
+      CORE.tour.clear();
+    }
+      break;
+    case 8: // SEND_TOUR_START
+    {
+      uint16_t pointsCount = bytesToUint16(data + 1, false);
+      DEBUG("Receiving tour data with %u points\n", pointsCount);
+      CORE.tour.clear(pointsCount);
+    }
+      break;
+    case 9: // SEND_TOUR_DATA_CHUNK
+    {
+      uint16_t chunkSize = bytesToUint16(data + 1, false);
+      DEBUG("Receiving tour data chunk with %u points\n", chunkSize);
+      for (uint16_t i = 0; i < chunkSize; i++) {
+        //NOTE: point index is important to mark connections between adjacent points
+        uint16_t pointIndex = bytesToUint16(data + 3 + i * 10, false);
+        float latitude = bytesToFloat(data + 5 + i * 10, false);
+        float longitude = bytesToFloat(data + 9 + i * 10, false);
+        CORE.tour.pushPoint(pointIndex, latitude, longitude);
       }
     }
       break;
@@ -169,7 +177,6 @@ int main() {
 
   CORE.start();
 
-  parsePngData(); //TODO: remove after testing
 
   /* LCD module Init */
   if (DEV_ModuleInit() != 0) {
