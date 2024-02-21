@@ -182,10 +182,7 @@ export class Bluetooth extends BluetoothEventEmitter {
     )
     try {
       const device = await targetDevice
-        .connect({
-          autoConnect: false,
-          // timeout: 20_000,
-        })
+        .connect({ autoConnect: false })
         .then((d) => d.discoverAllServicesAndCharacteristics())
       this.connectedDevice = device
       const subscription = this.connectedDevice.onDisconnected(() => {
@@ -266,7 +263,8 @@ export class Bluetooth extends BluetoothEventEmitter {
       messageData,
     )
 
-    await wait(Math.max(1, Math.min(32, messageData.length)))
+    // await wait(Math.max(1, Math.min(32, messageData.length)))
+    await wait(16)
 
     this.sendingMessage = false
     if (this.messagesQueue.length > 0) {

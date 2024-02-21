@@ -1,5 +1,4 @@
 import EventEmitter from 'events'
-import { type DecodedPng, decode } from 'fast-png'
 import { convertLatLongToTile } from '../utils'
 
 const serverLetters = ['a', 'b', 'c']
@@ -10,7 +9,7 @@ export interface Tile {
   x: number
   y: number
   z: number
-  image: DecodedPng
+  fileData: ArrayBuffer
 }
 
 declare interface MapProviderEventEmitter {
@@ -22,7 +21,7 @@ declare interface MapProviderEventEmitter {
 class MapProviderEventEmitter extends EventEmitter {}
 
 export class MapProvider extends MapProviderEventEmitter {
-  private readonly tilesRadius = 1
+  private readonly tilesRadius = 0 //TODO: 1
   private readonly tileResolution = 256
   //TODO: option for selecting tiles provider
   private readonly tilesProvider =
@@ -34,7 +33,7 @@ export class MapProvider extends MapProviderEventEmitter {
   private readonly serverLetter = getRandomServerLetter()
 
   private loadedTiles = new Map<TileURL, Tile>()
-  private tilesToLoad = new Map<TileURL, Omit<Tile, 'image'>>()
+  private tilesToLoad = new Map<TileURL, Omit<Tile, 'fileData'>>()
   private loadingTile = false
 
   setZoom(zoom: number) {
@@ -85,7 +84,7 @@ export class MapProvider extends MapProviderEventEmitter {
     if (this.loadingTile) {
       return
     }
-    const [url, partialTile]: [TileURL, Omit<Tile, 'image'>] =
+    const [url, partialTile]: [TileURL, Omit<Tile, 'fileData'>] =
       this.tilesToLoad.entries().next().value ?? []
     if (!url) {
       return
@@ -98,18 +97,8 @@ export class MapProvider extends MapProviderEventEmitter {
       .then((res) => res.arrayBuffer())
       .then((buffer) => {
         this.tilesToLoad.delete(url)
-        const image = decode(buffer, { checkCrc: true })
-        if (
-          image.width !== this.tileResolution ||
-          image.height !== this.tileResolution
-        ) {
-          console.error('Invalid tile resolution')
-          this.loadingTile = false
-          this.fetchNextTile()
-          return
-        }
 
-        const tile: Tile = { ...partialTile, image }
+        const tile: Tile = { ...partialTile, fileData: buffer }
         this.loadedTiles.set(url, tile)
         this.emit('tileLoaded', tile)
         this.loadingTile = false

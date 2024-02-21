@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer'
 import type { LocationState } from './gps'
-import { type Tile } from './mapProvider'
+import type { TourPoint } from './gpxParser'
+import type { Tile } from './mapProvider'
 
 // NOTE: reordering this enum will need to be reflected in raspberry pi project code
 export enum MessageType {
@@ -10,7 +11,9 @@ export enum MessageType {
   LOCATION_UPDATE,
   SEND_MAP_TILE_START,
   SEND_MAP_TILE_DATA_CHUNK,
-  SEND_MAP_TILE_INDEXED_COLORS_BATCH_48,
+  CLEAR_TOUR_DATA,
+  SEND_TOUR_START,
+  SEND_TOUR_DATA_CHUNK,
 }
 
 type MessageBase<T extends MessageType, DataType> = {
@@ -26,21 +29,17 @@ export type Message =
   | MessageBase<
       MessageType.SEND_MAP_TILE_START,
       {
-        tileIdentifier: Omit<Tile, 'image'>
-        tileWidth: number
-        tileHeight: number
-        dataByteLength: number
-        paletteSize: number
+        tileIdentifier: Omit<Tile, 'fileData'>
+        fileSize: number
       }
     >
   | MessageBase<
       MessageType.SEND_MAP_TILE_DATA_CHUNK,
       { chunkIndex: number; bytes: ArrayBuffer }
     >
-  | MessageBase<
-      MessageType.SEND_MAP_TILE_INDEXED_COLORS_BATCH_48,
-      { colorIndex: number; red: number; green: number; blue: number }[]
-    >
+  | MessageBase<MessageType.CLEAR_TOUR_DATA, null>
+  | MessageBase<MessageType.SEND_TOUR_START, { pointsCount: number }>
+  | MessageBase<MessageType.SEND_TOUR_DATA_CHUNK, TourPoint[]>
 
 /** Returns base64 representation of buffer (224 bytes limit) */
 export function parseMessageData(message: Message) {
@@ -50,6 +49,7 @@ export function parseMessageData(message: Message) {
     default:
     case MessageType.PING:
     case MessageType.TAKE_PHOTO:
+    case MessageType.CLEAR_TOUR_DATA:
       buffer = Buffer.alloc(1)
       break
     case MessageType.SET_LIGHTNESS:
@@ -76,14 +76,11 @@ export function parseMessageData(message: Message) {
       buffer.writeBigUInt64LE(BigInt(message.data.timestamp), 17)
       break
     case MessageType.SEND_MAP_TILE_START:
-      buffer = Buffer.alloc(23)
+      buffer = Buffer.alloc(17)
       buffer.writeUint32LE(message.data.tileIdentifier.x, 1)
       buffer.writeUint32LE(message.data.tileIdentifier.y, 5)
       buffer.writeUint32LE(message.data.tileIdentifier.z, 9)
-      buffer.writeUint16LE(message.data.tileWidth, 13)
-      buffer.writeUint16LE(message.data.tileHeight, 15)
-      buffer.writeUint32LE(message.data.dataByteLength, 17)
-      buffer.writeUint16LE(message.data.paletteSize, 21)
+      buffer.writeUint32LE(message.data.fileSize, 13)
       break
     case MessageType.SEND_MAP_TILE_DATA_CHUNK:
       {
@@ -97,14 +94,22 @@ export function parseMessageData(message: Message) {
         }
       }
       break
-    case MessageType.SEND_MAP_TILE_INDEXED_COLORS_BATCH_48:
-      buffer = Buffer.alloc(1 + message.data.length * 5)
-      for (let ci = 0; ci < message.data.length; ci++) {
-        const color = message.data[ci]
-        buffer.writeUint16LE(color.colorIndex, 1 + 5 * ci)
-        buffer.writeUInt8(color.red, 3 + 5 * ci)
-        buffer.writeUInt8(color.green, 4 + 5 * ci)
-        buffer.writeUInt8(color.blue, 5 + 5 * ci)
+    case MessageType.SEND_TOUR_START:
+      buffer = Buffer.alloc(3)
+      buffer.writeUint16LE(message.data.pointsCount, 1)
+      break
+    case MessageType.SEND_TOUR_DATA_CHUNK:
+      {
+        const chunkSize = message.data.length
+        buffer = Buffer.alloc(3 + chunkSize * 10)
+        buffer.writeUint16LE(chunkSize, 1)
+
+        for (let i = 0; i < message.data.length; i++) {
+          const point = message.data[i]
+          buffer.writeUint16LE(point.index, 3 + i * 10)
+          buffer.writeFloatLE(point.latitude, 5 + i * 10)
+          buffer.writeFloatLE(point.longitude, 9 + i * 10)
+        }
       }
       break
   }
