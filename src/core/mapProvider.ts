@@ -21,7 +21,7 @@ declare interface MapProviderEventEmitter {
 class MapProviderEventEmitter extends EventEmitter {}
 
 export class MapProvider extends MapProviderEventEmitter {
-  private readonly tilesRadius = 0 //TODO: 1
+  private readonly tilesRadius = 1
   private readonly tileResolution = 256
   //TODO: option for selecting tiles provider
   private readonly tilesProvider =
@@ -58,8 +58,12 @@ export class MapProvider extends MapProviderEventEmitter {
   update(latitude: number, longitude: number) {
     const { x, y } = convertLatLongToTile(latitude, longitude, this.zoom)
 
+    this.loadTile(x, y)
     for (let i = -this.tilesRadius; i <= this.tilesRadius; i++) {
       for (let j = -this.tilesRadius; j <= this.tilesRadius; j++) {
+        if (i === 0 && j === 0) {
+          continue
+        }
         this.loadTile(x + i, y + j)
       }
     }

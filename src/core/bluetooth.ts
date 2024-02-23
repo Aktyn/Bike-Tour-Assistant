@@ -263,8 +263,7 @@ export class Bluetooth extends BluetoothEventEmitter {
       messageData,
     )
 
-    // await wait(Math.max(1, Math.min(32, messageData.length)))
-    await wait(16)
+    await wait(8)
 
     this.sendingMessage = false
     if (this.messagesQueue.length > 0) {

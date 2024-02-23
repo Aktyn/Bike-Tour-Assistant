@@ -106,4 +106,4 @@ export function debounce<FunctionType extends AnyFunction>(
 }
 
 export const wait = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms))
+  new Promise<void>((resolve) => BackgroundTimer.setTimeout(resolve, ms))
