@@ -21,10 +21,10 @@ uint16_t *allocateImageBuffer(uint16_t width, uint16_t height)
 {
   uint32_t image_size = height * width * sizeof(uint16_t);
   uint16_t *image;
-  if ((image = (uint16_t *)malloc(image_size)) == NULL)
+  if ((image = (uint16_t *)malloc(image_size)) == nullptr)
   {
     DEBUG("Failed to allocate memory for image buffer...\n");
-    return NULL;
+    return nullptr;
   }
   return image;
 }
@@ -106,7 +106,7 @@ int drawImageFromJpgFile(const char *path, uint16_t x, uint16_t y, uint16_t targ
   uint16_t target_height = (cinfo.image_height * target_width) / cinfo.image_width;
   DEBUG("Target height: %d\n", target_height);
   uint16_t *image = allocateImageBuffer(target_width, target_height);
-  if (image == NULL)
+  if (image == nullptr)
   {
     return 1;
   }
@@ -138,15 +138,15 @@ int drawImageFromJpgFile(const char *path, uint16_t x, uint16_t y, uint16_t targ
 
   drawImageBuffer(image, x, y, target_width, target_height);
   free(image);
-  image = NULL;
+  image = nullptr;
 
   return 0;
 }
 
-void drawLine(const char *text, uint16_t x, uint16_t y, uint16_t width, uint16_t color, uint16_t background, sFONT *font, TEXT_ALIGN align)
+void drawTextLine(const char *text, uint16_t x, uint16_t y, uint16_t width, uint16_t color, uint16_t background, sFONT *font, TEXT_ALIGN align)
 {
   uint16_t *textImage = allocateImageBuffer(width, font->Height);
-  if (textImage == NULL)
+  if (textImage == nullptr)
   {
     return;
   }
@@ -170,7 +170,7 @@ void drawLine(const char *text, uint16_t x, uint16_t y, uint16_t width, uint16_t
   drawImageBuffer(textImage, x, y, width, font->Height);
 
   free(textImage);
-  textImage = NULL;
+  textImage = nullptr;
 }
 
 void clearScreen(uint16_t color)

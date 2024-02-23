@@ -17,14 +17,18 @@ uint16_t convertRgbColor(uint16_t color);
 
 uint16_t findNextPowerOf2(uint16_t n);
 
-float bytesToFloat(uint8_t *bytes, bool big_endian);
+float bytesToFloat(const uint8_t *bytes, bool big_endian);
 
-uint16_t bytesToUint16(uint8_t *bytes, bool big_endian);
+uint16_t bytesToUint16(const uint8_t *bytes, bool big_endian);
 
-uint32_t bytesToUint32(uint8_t *bytes, bool big_endian);
+uint32_t bytesToUint32(const uint8_t *bytes, bool big_endian);
 
-uint64_t bytesToUint64(uint8_t *bytes, bool big_endian);
+uint64_t bytesToUint64(const uint8_t *bytes, bool big_endian);
 
 float metersPerSecondToKmPerHour(float metersPerSecond);
+
+double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double lon2); // in meters
+
+double degreesToRadians(double degrees);
 
 #endif // __UTILS_H

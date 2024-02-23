@@ -35,13 +35,13 @@ void showIntroView(void)
   DEV_Delay_ms(500);
 
   uint16_t text_y = LCD_2IN4_HEIGHT / 2 - Font20.Height;
-  drawLine("Bike Tour", 0, text_y, LCD_2IN4_WIDTH, WHITE, BLACK, &Font20, ALIGN_CENTER);
+  drawTextLine("Bike Tour", 0, text_y, LCD_2IN4_WIDTH, WHITE, BLACK, &Font20, ALIGN_CENTER);
   text_y += Font20.Height;
-  drawLine("Assistant", 0, text_y, LCD_2IN4_WIDTH, WHITE, BLACK, &Font20, ALIGN_CENTER);
+  drawTextLine("Assistant", 0, text_y, LCD_2IN4_WIDTH, WHITE, BLACK, &Font20, ALIGN_CENTER);
   text_y += Font20.Height;
 
   DEV_Delay_ms(500);
-  drawLine("Made by Aktyn", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font16, ALIGN_CENTER);
+  drawTextLine("Made by Aktyn", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font16, ALIGN_CENTER);
 
   DEV_Delay_ms(500);
   drawImageFromBitmapFile("../assets/bluetooth_off.bmp",
@@ -50,9 +50,9 @@ void showIntroView(void)
 
   DEV_Delay_ms(500);
   text_y = (LCD_2IN4_HEIGHT * 3 / 2 + BLUETOOTH_ICON_HEIGHT) / 2;
-  drawLine("Waiting for", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font12, ALIGN_CENTER);
+  drawTextLine("Waiting for", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font12, ALIGN_CENTER);
   text_y += Font12.Height;
-  drawLine("bluetooth connection", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font12, ALIGN_CENTER);
+  drawTextLine("bluetooth connection", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font12, ALIGN_CENTER);
 
   DEV_Delay_ms(500);
 

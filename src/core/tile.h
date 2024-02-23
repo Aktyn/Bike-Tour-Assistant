@@ -13,9 +13,9 @@ public:
 
   ~Tile();
 
-  static std::string getTileKey(uint32_t x, uint32_t y, uint32_t z) {
-    return std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
-  }
+  static std::string getTileKey(uint32_t x, uint32_t y, uint32_t z);
+
+  static std::pair<double, double> convertLatLongToTileXY(float latitude, float longitude, uint8_t zoom);
 
   const std::string key;
   const uint32_t x;

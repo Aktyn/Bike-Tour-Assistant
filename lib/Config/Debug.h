@@ -16,8 +16,18 @@
 
 #if USE_DEBUG
 #define DEBUG(__info, ...) printf("Debug: " __info, ##__VA_ARGS__)
+
+inline void ASSERT(unsigned condition, const char *message) {
+  if (!condition) {
+    fprintf(stderr, "Assertion failed: %s\n", message);
+  }
+}
+
 #else
 #define DEBUG(__info, ...)
+inline void ASSERT(unsigned condition, const char *message) {
+  // noop
+}
 #endif
 
 #endif //__DEBUG_H

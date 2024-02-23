@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <iostream>
 #include <cmath>
+#include <chrono>
 
 extern "C"
 {
@@ -31,30 +32,42 @@ void *displayThread(void *args) {
       showIntroView(); // This function includes while loop breaking on bluetooth connection
     }
     clearScreen(BLACK);
-    drawLine("Waiting for map data",
-             0, LCD_2IN4_HEIGHT * 3 / 4 - Font16.Height / 2, LCD_2IN4_WIDTH,
-             WHITE, BLACK, &Font16, ALIGN_CENTER);
+    drawTextLine("Waiting for map data",
+                 0, LCD_2IN4_HEIGHT * 3 / 4 - Font16.Height / 2, LCD_2IN4_WIDTH,
+                 WHITE, BLACK, &Font16, ALIGN_CENTER);
 
     while (CORE.isBluetoothConnected) {
       if (CORE.needMapRedraw) {
         CORE.needMapRedraw = false;
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+
         uint16_t *mapBuffer = CORE.generateMap();
         if (mapBuffer == nullptr) {
-          std::cerr << "Failed to generate map" << std::endl;
           continue;
         }
         drawImageBuffer(mapBuffer, 0, LCD_2IN4_HEIGHT - MAP_HEIGHT, MAP_WIDTH, MAP_HEIGHT);
         free(mapBuffer);
+
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto executionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        DEBUG("Map render took %lld milliseconds\n", executionDuration.count());
       }
 
       if (CORE.needSpeedRedraw) {
         CORE.needSpeedRedraw = false;
         std::string speedText = std::to_string((uint16_t) std::round(CORE.location.speed));
         //TODO: draw digits from bitmap files (cache loaded buffers)
-        drawLine(speedText.c_str(),
-                 0, (LCD_2IN4_HEIGHT - MAP_HEIGHT) / 2 - Font50.Height / 2, LCD_2IN4_WIDTH,
-                 WHITE, BLACK, &Font50, ALIGN_CENTER);
+        drawTextLine(speedText.c_str(),
+                     0, (LCD_2IN4_HEIGHT - MAP_HEIGHT) / 2 - Font50.Height / 2, LCD_2IN4_WIDTH,
+                     WHITE, BLACK, &Font50, ALIGN_CENTER);
       }
+
+      //TODO: CORE.needDirectionRedraw and render small compass widget in the corner
+
+      //TODO: monitor device temperature and show proper warning if it's too high
+
+      //TODO: monitor battery level and show small battery widget in the corner
 
       // sleep for 16ms
       usleep(16 * 1000);
@@ -131,7 +144,7 @@ void handleMessage(unsigned char *data) {
     case 6: // SEND_MAP_TILE_DATA_CHUNK
     {
       uint16_t chunkIndex = bytesToUint16(data + 1, false);
-      DEBUG("Map tile data chunk %d\n", chunkIndex);
+//      DEBUG("Map tile data chunk %d\n", chunkIndex);
       CORE.appendTileImageData(chunkIndex, data + 3);
     }
       break;

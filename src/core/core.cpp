@@ -1,15 +1,14 @@
 #include "core.h"
-#include "display/draw.h"
-#include "GUI_BMP.h"
 #include "utils.h"
+#include "renderer.h"
 
 #include <cmath>
 
 Core &CORE = Core::getInstance();
 
-Core::Core() : isBluetoothConnected(false), isRunning(false), needMapRedraw(false), fetchingTile(nullptr) {
+Core::Core() : isBluetoothConnected(false), isRunning(false), needMapRedraw(false), needSpeedRedraw(false),
+               fetchingTile(nullptr), location({0, 0, 0, 0, 0, 0}) {
   this->mapZoom = 0; // 0 means there is no tiles registered yet
-  this->location = {0, 0, 0, 0, 0, 0};
 }
 
 Core::~Core() {
@@ -61,46 +60,39 @@ void Core::updateLocation(float latitude, float longitude, float speed, float he
   auto previousUpdateTimestamp = this->location.timestamp;
 
   if (std::round(this->location.speed) != std::round(metersPerSecondToKmPerHour(speed))) {
+    this->location.speed = metersPerSecondToKmPerHour(speed);
     this->needSpeedRedraw = true;
   }
 
-  this->location.latitude = latitude;
-  this->location.longitude = longitude;
-  this->location.speed = metersPerSecondToKmPerHour(speed);
-  this->location.heading = heading;
+  if (std::round(this->location.heading) != std::round(heading)) {
+    this->location.heading = heading;
+    this->needMapRedraw = true;
+  }
+
+  double positionDifference = distanceBetweenCoordinates(
+      this->location.latitude, this->location.longitude,
+      latitude, longitude
+  );
+
+  // Update location if the difference is more than 0.5 meters
+  if (positionDifference > 0.5) {
+    this->location.latitude = latitude;
+    this->location.longitude = longitude;
+    this->needMapRedraw = true;
+  }
+
   this->location.timestamp = timestamp;
   this->location.previousUpdateTimestamp = previousUpdateTimestamp;
 
 }
 
 uint16_t *Core::generateMap() {
-  //TODO: draw dynamic map based on location and loaded tiles
-
-  if (this->tiles.empty()) {
+  try {
+    return renderer::renderMap(this->tiles, this->tour, this->location, this->mapZoom);
+  } catch (const std::exception &e) {
+    std::cerr << "Error rendering map: " << e.what() << std::endl;
     return nullptr;
   }
-
-  Tile *tile = this->tiles.begin()->second;
-  if (!tile->isFullyLoaded() || tile->imageData.empty()) {
-    return nullptr;
-  }
-
-  uint16_t *buffer = allocateImageBuffer(MAP_WIDTH, MAP_HEIGHT);
-  for (uint16_t y = 0; y < MAP_HEIGHT; y++) {
-    for (uint16_t x = 0; x < MAP_WIDTH; x++) {
-      uint16_t index = (MAP_HEIGHT - 1 - y) * MAP_WIDTH + (MAP_WIDTH - 1 - x);
-      uint16_t tileIndex = (y % tile->tileWidth) * tile->tileWidth + (x % tile->tileHeight);
-      buffer[index] = convertRgbColor(
-          RGB(
-              tile->imageData[tileIndex * 3 + 0],
-              tile->imageData[tileIndex * 3 + 1],
-              tile->imageData[tileIndex * 3 + 2]
-          )
-      );
-    }
-  }
-
-  return buffer; // buffer must be freed
 }
 
 uint8_t Core::getMapZoom() const {

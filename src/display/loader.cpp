@@ -2,8 +2,8 @@
 
 #include "draw.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 extern "C"
 {
@@ -26,7 +26,7 @@ void showThreeDotsLoader(uint16_t x, uint16_t y, bool (*condition)())
 
   uint16_t offset = 0;
 
-  while (condition() == true)
+  while (condition())
   {
     Paint_Clear(BLACK);
 
@@ -60,5 +60,5 @@ void showThreeDotsLoader(uint16_t x, uint16_t y, bool (*condition)())
   }
 
   free(loaderImage);
-  loaderImage = NULL;
+  loaderImage = nullptr;
 }
