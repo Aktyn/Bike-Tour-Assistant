@@ -11,7 +11,11 @@ export type LocationState = {
   latitude: number
   longitude: number
   /** The altitude in meters above the WGS 84 reference ellipsoid */
-  // altitude: number
+  altitude: number
+  /** The accuracy of the altitude value, in meters */
+  altitudeAccuracy: number
+  /** The radius of uncertainty for the location, measured in meters */
+  accuracy: number
   /** Horizontal direction of travel of this device, measured in degrees starting at due north and continuing clockwise around the compass. Thus, north is 0 degrees, east is 90 degrees, south is 180 degrees, and so on. */
   heading: number
   /** Meters per second */
@@ -44,8 +48,9 @@ export class GPS extends GPSEventEmitter {
     latitude: 0,
     longitude: 0,
     heading: 0,
-    // altitude: -Number.MAX_SAFE_INTEGER,
-    // slope: 0,
+    altitude: -Number.MAX_SAFE_INTEGER,
+    altitudeAccuracy: 0,
+    accuracy: 0,
     speed: 0,
   }
   locationObservingOptions: {
@@ -73,8 +78,9 @@ export class GPS extends GPSEventEmitter {
       timestamp: location.timestamp,
       heading: location.coords.heading ?? 0,
       speed: location.coords.speed ?? 0,
-      //TODO: use accuracy to show area of uncertainty
-      //TODO: use altitude to calculate slope
+      altitude: location.coords.altitude ?? 0,
+      altitudeAccuracy: location.coords.altitudeAccuracy ?? 0,
+      accuracy: location.coords.accuracy ?? 0,
       ...pick(location.coords, 'latitude', 'longitude'),
     }
     this.emit('locationUpdate', this.locationState)

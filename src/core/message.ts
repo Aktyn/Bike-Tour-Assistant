@@ -57,7 +57,7 @@ export function parseMessageData(message: Message) {
       buffer.writeUInt8(Math.floor(message.data.lightness), 1)
       break
     case MessageType.LOCATION_UPDATE:
-      buffer = Buffer.alloc(25)
+      buffer = Buffer.alloc(65)
 
       /** 
        * Example message.data:
@@ -69,11 +69,14 @@ export function parseMessageData(message: Message) {
             timestamp: 1708199578000,
           }
         */
-      buffer.writeFloatLE(message.data.latitude, 1)
-      buffer.writeFloatLE(message.data.longitude, 5)
-      buffer.writeFloatLE(message.data.speed, 9)
-      buffer.writeFloatLE(message.data.heading, 13)
-      buffer.writeBigUInt64LE(BigInt(message.data.timestamp), 17)
+      buffer.writeDoubleLE(message.data.latitude, 1)
+      buffer.writeDoubleLE(message.data.longitude, 9)
+      buffer.writeDoubleLE(message.data.speed, 17)
+      buffer.writeDoubleLE(message.data.heading, 25)
+      buffer.writeDoubleLE(message.data.altitude, 33)
+      buffer.writeDoubleLE(message.data.altitudeAccuracy, 41)
+      buffer.writeDoubleLE(message.data.accuracy, 49)
+      buffer.writeBigUInt64LE(BigInt(message.data.timestamp), 57)
       break
     case MessageType.SEND_MAP_TILE_START:
       buffer = Buffer.alloc(17)

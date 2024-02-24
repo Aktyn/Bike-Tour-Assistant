@@ -129,6 +129,8 @@ export class Core {
       locationState.heading,
       'Speed:',
       locationState.speed,
+      'Altitude:',
+      locationState.altitude,
     )
 
     if (!this.bluetooth.isConnectedToDevice()) {
