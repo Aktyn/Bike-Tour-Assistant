@@ -142,6 +142,31 @@ float bytesToFloat(const uint8_t *bytes, bool big_endian) {
   return f;
 }
 
+double bytesToDouble(const uint8_t *bytes, bool big_endian) {
+  double d;
+  auto *d_ptr = (uint8_t *) &d;
+  if (big_endian) {
+    d_ptr[7] = bytes[0];
+    d_ptr[6] = bytes[1];
+    d_ptr[5] = bytes[2];
+    d_ptr[4] = bytes[3];
+    d_ptr[3] = bytes[4];
+    d_ptr[2] = bytes[5];
+    d_ptr[1] = bytes[6];
+    d_ptr[0] = bytes[7];
+  } else {
+    d_ptr[7] = bytes[7];
+    d_ptr[6] = bytes[6];
+    d_ptr[5] = bytes[5];
+    d_ptr[4] = bytes[4];
+    d_ptr[3] = bytes[3];
+    d_ptr[2] = bytes[2];
+    d_ptr[1] = bytes[1];
+    d_ptr[0] = bytes[0];
+  }
+  return d;
+}
+
 uint16_t bytesToUint16(const uint8_t *bytes, bool big_endian) {
   uint16_t i;
   auto *i_ptr = (uint8_t *) &i;
@@ -197,8 +222,8 @@ uint64_t bytesToUint64(const uint8_t *bytes, bool big_endian) {
   return i;
 }
 
-float metersPerSecondToKmPerHour(float metersPerSecond) {
-  return metersPerSecond * 3.6f;
+double metersPerSecondToKmPerHour(double metersPerSecond) {
+  return metersPerSecond * 3.6;
 }
 
 double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double lon2) {
@@ -217,5 +242,10 @@ double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double 
 }
 
 double degreesToRadians(double degrees) {
-  return degrees * M_PI / 180.0;
+  return (degrees * M_PI) / 180.0;
 }
+
+double mix(double a, double b, double mix) {
+  return a * (1.0 - mix) + b * mix;
+}
+

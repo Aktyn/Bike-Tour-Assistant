@@ -1,22 +1,39 @@
 #include "core.h"
 #include "utils.h"
 #include "renderer.h"
+#include "pngUtils.h"
 
 #include <cmath>
 
 Core &CORE = Core::getInstance();
 
-Core::Core() : isBluetoothConnected(false), isRunning(false), needMapRedraw(false), needSpeedRedraw(false),
+Core::Core() : isBluetoothConnected(false), isRunning(false),
+               needMapRedraw(false), needDirectionRedraw(false), needSpeedRedraw(false),
                fetchingTile(nullptr), location({0, 0, 0, 0, 0, 0}) {
   this->mapZoom = 0; // 0 means there is no tiles registered yet
+
+  this->directionArrowSize = loadPngFile(
+      this->directionArrowImageData,
+      "../assets/direction_arrow_40x40.png", LCT_RGBA
+  );
+  DEBUG("Direction arrow size: %dx%d\n", this->directionArrowSize.first, this->directionArrowSize.second);
 }
 
 Core::~Core() {
   this->clearTiles();
+  this->directionArrowImageData.clear();
 }
 
 void Core::start() {
   this->isRunning = true;
+}
+
+void Core::reset() {
+  this->clearTiles();
+  this->tour.clear();
+  this->needMapRedraw = true;
+  this->needSpeedRedraw = true;
+  this->needDirectionRedraw = true;
 }
 
 void Core::clearTiles() {
@@ -56,7 +73,10 @@ void Core::appendTileImageData(uint16_t chunkIndex, uint8_t *data) {
   }
 }
 
-void Core::updateLocation(float latitude, float longitude, float speed, float heading, uint64_t timestamp) {
+void Core::updateLocation(
+    double latitude, double longitude, double speed, double heading,
+    double altitude, double altitudeAccuracy, double accuracy, uint64_t timestamp
+) {
   auto previousUpdateTimestamp = this->location.timestamp;
 
   if (std::round(this->location.speed) != std::round(metersPerSecondToKmPerHour(speed))) {
@@ -67,6 +87,7 @@ void Core::updateLocation(float latitude, float longitude, float speed, float he
   if (std::round(this->location.heading) != std::round(heading)) {
     this->location.heading = heading;
     this->needMapRedraw = true;
+    this->needDirectionRedraw = true;
   }
 
   double positionDifference = distanceBetweenCoordinates(
@@ -81,22 +102,33 @@ void Core::updateLocation(float latitude, float longitude, float speed, float he
     this->needMapRedraw = true;
   }
 
+  //TODO: calculate and display current slope based on those values
+  this->location.altitude = altitude;
+  this->location.altitudeAccuracy = altitudeAccuracy;
+  this->location.accuracy = accuracy;
+
   this->location.timestamp = timestamp;
   this->location.previousUpdateTimestamp = previousUpdateTimestamp;
-
 }
 
-uint16_t *Core::generateMap() {
+void Core::drawMap() {
   try {
-    return renderer::renderMap(this->tiles, this->tour, this->location, this->mapZoom);
+    renderer::renderMap(this->tiles, this->tour, this->location, this->mapZoom);
   } catch (const std::exception &e) {
     std::cerr << "Error rendering map: " << e.what() << std::endl;
-    return nullptr;
   }
 }
 
 uint8_t Core::getMapZoom() const {
   return this->mapZoom;
+}
+
+const std::vector<uint8_t> &Core::getDirectionArrowImageData() const {
+  return directionArrowImageData;
+}
+
+const std::pair<uint16_t, uint16_t> &Core::getDirectionArrowSize() const {
+  return directionArrowSize;
 }
 
 bool isBluetoothDisconnected() {

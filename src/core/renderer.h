@@ -10,12 +10,21 @@
 #include <map>
 
 namespace renderer {
-  uint16_t *renderMap(
+  void prepareMainView();
+
+  void renderMap(
       const std::map<std::string, Tile *> &tiles,
       Tour &tour,
       const Location &location,
       uint8_t mapZoom
-  ); // Returns a pointer to the rendered map (user must free the memory after use)
+  );
+
+  void drawSpeed(double speed);
+
+  void drawBattery(uint8_t percentage);
+
+  void drawDirectionArrow(double heading,
+                          const std::vector<uint8_t> &imageData, const std::pair<uint16_t, uint16_t> &size);
 }
 
 #endif //BIKETOURASSISTANT_RENDERER_H

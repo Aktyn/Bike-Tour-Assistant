@@ -7,10 +7,12 @@
 extern "C"
 {
 #include "GUI_BMP.h"
-#include "DEV_Config.h"
-#include "LCD_2inch4.h"
-#include "GUI_Paint.h"
 }
+
+#define BACKGROUND_RED 34
+#define BACKGROUND_GREEN 46
+#define BACKGROUND_BLUE 52
+static auto backgroundColor = RGB(BACKGROUND_RED, BACKGROUND_GREEN, BACKGROUND_BLUE);
 
 void rotateAroundPivot(double x, double y, double pivotX, double pivotY, double rotation, double &outX, double &outY) {
   if (rotation == 0) {
@@ -58,17 +60,23 @@ bool centerAndTrimLineSegment(
   return false;
 }
 
-uint16_t *renderer::renderMap(
+void renderer::prepareMainView() {
+  clearScreen(backgroundColor);
+  drawTextLine("Waiting for map data",
+               0, LCD_2IN4_HEIGHT * 3 / 4 - Font16.Height / 2, LCD_2IN4_WIDTH,
+               WHITE, backgroundColor, &Font16, ALIGN_CENTER);
+}
+
+void renderer::renderMap(
     const std::map<std::string, Tile *> &tiles,
     Tour &tour,
     const Location &location,
     const uint8_t mapZoom
 ) {
   if (tiles.empty() && tour.empty()) {
-    return nullptr;
+    return;
   }
 
-  auto backgroundColor = RGB(38, 50, 56);
   auto currentLocationOutlineColor = RGB(0, 96, 100);
   auto tourLineColor = RGB(255, 167, 38);
 
@@ -76,10 +84,8 @@ uint16_t *renderer::renderMap(
   Paint_NewImage(buffer, MAP_WIDTH, MAP_HEIGHT, 0, WHITE, 24);
   Paint_Clear(backgroundColor);
 
-
   uint16_t tileWidth = 256;
   uint16_t tileHeight = 256;
-
   const uint16_t centerX = MAP_WIDTH / 2;
   const uint16_t centerY = MAP_HEIGHT / 2;
   auto locationTileXY = Tile::convertLatLongToTileXY(location.latitude, location.longitude, mapZoom);
@@ -100,7 +106,7 @@ uint16_t *renderer::renderMap(
         double pixelTileX = double(x - centerX) / double(tileWidth) + locationTileX;
         double pixelTileY = double(y - centerY) / double(tileHeight) + locationTileY;
         rotateAroundPivot(pixelTileX, pixelTileY, locationTileX, locationTileY,
-                          -rotationRad, pixelTileX, pixelTileY);
+                          rotationRad, pixelTileX, pixelTileY);
 
         auto tileKey = Tile::getTileKey(uint32_t(pixelTileX), uint32_t(pixelTileY), mapZoom);
         if (tiles.find(tileKey) == tiles.end()) {
@@ -159,8 +165,8 @@ uint16_t *renderer::renderMap(
       auto endX = (points[i].tileX - locationTileX) * double(tileWidth);
       auto endY = (points[i].tileY - locationTileY) * double(tileHeight);
 
-      rotateAroundPivot(startX, startY, 0, 0, rotationRad, startX, startY);
-      rotateAroundPivot(endX, endY, 0, 0, rotationRad, endX, endY);
+      rotateAroundPivot(startX, startY, 0, 0, -rotationRad, startX, startY);
+      rotateAroundPivot(endX, endY, 0, 0, -rotationRad, endX, endY);
 
       int16_t lineStartX, lineStartY, lineEndX, lineEndY;
       bool outOfBounds = centerAndTrimLineSegment(
@@ -182,8 +188,114 @@ uint16_t *renderer::renderMap(
                    currentLocationOutlineColor, DOT_PIXEL_1X1, DRAW_FILL_FULL);
   Paint_DrawCircle(centerX, centerY, 3,
                    BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-  // TODO: draw outlined circle as area of uncertainty, based on GPS accuracy
 
-  return buffer; // buffer must be freed
+  // Draw outlined circle as area of uncertainty, based on GPS accuracy (TODO: add option for hiding it)
+  //Spixel = C ∙ cos(latitude) / 2 (zoomlevel + 8); // https://wiki.openstreetmap.org/wiki/Zoom_levels
+  const double C = 40075016.686;
+  double metersPerPixel = (C * cos(degreesToRadians(location.latitude)) / pow(2, mapZoom)) / double(tileWidth);
+  auto accuracyPixelsRadius = uint16_t(location.accuracy / metersPerPixel);
+//  DEBUG("metersPerPixel: %f; map zoom: %u, accuracy pixel radius: %u\n", metersPerPixel, mapZoom, accuracyPixelsRadius);
+  uint16_t radius = std::min(accuracyPixelsRadius, uint16_t(MAP_WIDTH / 2));
+  Paint_DrawCircle(centerX, centerY, radius,
+                   CYAN, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+
+  drawImageBuffer(buffer, 0, LCD_2IN4_HEIGHT - MAP_HEIGHT, MAP_WIDTH, MAP_HEIGHT);
+  free(buffer);
 }
 
+void renderer::drawSpeed(double speed) {
+  std::string speedText = std::to_string((uint16_t) std::round(speed));
+
+  //TODO: draw digits from bitmap files (cache loaded buffers)
+  drawTextLine(speedText.c_str(),
+               TOP_PANEL_HEIGHT, (LCD_2IN4_HEIGHT - MAP_HEIGHT) / 2 - Font50.Height / 2,
+               LCD_2IN4_WIDTH - TOP_PANEL_HEIGHT * 2,
+               WHITE, backgroundColor, &Font50, ALIGN_CENTER);
+}
+
+void renderer::drawBattery(uint8_t percentage) {
+  const uint16_t imageWidth = TOP_PANEL_HEIGHT;
+  const uint16_t imageHeight = TOP_PANEL_HEIGHT;
+  const uint16_t widgetWidth = imageWidth / 3;
+  const uint16_t widgetHeight = widgetWidth / 2;
+  const uint16_t widgetHeadWidth = 4;
+  const uint16_t gapY = 4;
+
+  uint16_t *imageBuffer = allocateImageBuffer(imageWidth, imageHeight);
+  if (imageBuffer == nullptr) {
+    return;
+  }
+
+  uint16_t xStart = (imageWidth - widgetWidth) / 2;
+  uint16_t yStart = imageHeight / 2 - widgetHeight - gapY / 2;
+  double factor = double(percentage) / 100.0;
+  auto batteryColor = RGB(
+      uint8_t(mix(229, 165, factor)),
+      uint8_t(mix(115, 214, factor)),
+      uint8_t(mix(115, 167, factor))
+  );
+
+  Paint_NewImage(imageBuffer, imageWidth, imageHeight, 0, WHITE, 16);
+  Paint_Clear(backgroundColor);
+
+  Paint_DrawRectangle(xStart, yStart, xStart + widgetWidth * uint16_t(percentage) / 100, yStart + widgetHeight,
+                      batteryColor, DOT_PIXEL_2X2, DRAW_FILL_FULL);
+  Paint_DrawRectangle(xStart, yStart, xStart + widgetWidth, yStart + widgetHeight,
+                      batteryColor, DOT_PIXEL_2X2, DRAW_FILL_EMPTY);
+  Paint_DrawRectangle(xStart + widgetWidth, yStart + widgetHeight / 2 - widgetHeight / 4,
+                      xStart + widgetWidth + widgetHeadWidth, yStart + widgetHeight / 2 + widgetHeight / 4,
+                      batteryColor, DOT_PIXEL_2X2, DRAW_FILL_FULL);
+
+  std::string batteryPercentageText = std::to_string(percentage) + "%";
+  uint16_t aligned_x = (imageWidth - Font16.Width * batteryPercentageText.length()) / 2;
+  Paint_DrawString_EN(aligned_x, imageHeight / 2 + gapY / 2, batteryPercentageText.c_str(), &Font16,
+                      backgroundColor, batteryColor);
+
+  drawImageBuffer(imageBuffer, 0, 0, imageWidth, imageHeight);
+  free(imageBuffer);
+  imageBuffer = nullptr;
+}
+
+void renderer::drawDirectionArrow(
+    double heading,
+    const std::vector<uint8_t> &imageData, const std::pair<uint16_t, uint16_t> &size
+) {
+  const uint16_t imageWidth = size.first;
+  const uint16_t imageHeight = size.second;
+
+  uint16_t *imageBuffer = allocateImageBuffer(imageWidth, imageHeight);
+  if (imageBuffer == nullptr) {
+    return;
+  }
+
+  auto rotationRad = degreesToRadians(heading);
+
+  for (uint16_t y = 0; y < imageHeight; y++) {
+    for (uint16_t x = 0; x < imageWidth; x++) {
+      double rotatedX, rotatedY;
+      rotateAroundPivot(x, y, imageWidth / 2.0, imageHeight / 2.0, rotationRad,
+                        rotatedX, rotatedY);
+
+      uint16_t index = (imageHeight - 1 - y) * imageWidth + (imageWidth - 1 - x);
+      if (rotatedX < 0 || rotatedX >= imageWidth || rotatedY < 0 || rotatedY >= imageHeight) {
+        imageBuffer[index] = convertRgbColor(backgroundColor);
+        continue;
+      }
+
+      uint16_t rotatedIndex = uint16_t(rotatedY) * imageWidth + uint16_t(rotatedX);
+      uint16_t pixelIndex = rotatedIndex * 4;
+      auto alphaFactor = double(imageData[pixelIndex + 3]) / 255.0;
+      imageBuffer[index] = convertRgbColor(
+          RGB(
+              uint8_t(mix(BACKGROUND_RED, imageData[pixelIndex + 0], alphaFactor)),
+              uint8_t(mix(BACKGROUND_GREEN, imageData[pixelIndex + 1], alphaFactor)),
+              uint8_t(mix(BACKGROUND_BLUE, imageData[pixelIndex + 2], alphaFactor))
+          )
+      );
+    }
+  }
+
+  drawImageBuffer(imageBuffer, LCD_2IN4_WIDTH - imageWidth, 0, imageWidth, imageHeight);
+  free(imageBuffer);
+  imageBuffer = nullptr;
+}

@@ -46,6 +46,7 @@ uint16_t *allocateImageBufferFromBitmapFile(const char *path, uint16_t width, ui
 void drawImageBuffer(const uint16_t *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
   y = LCD_2IN4_HEIGHT - y - height;
+  x = LCD_2IN4_WIDTH - x - width;
 
   LCD_2IN4_SetWindow(x, y, width + x, height + y);
   DEV_Digital_Write(LCD_DC, 1);

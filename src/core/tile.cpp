@@ -1,5 +1,6 @@
 #include "tile.h"
 #include "pngUtils.h"
+#include "utils.h"
 
 #include <cstring>
 #include <cmath>
@@ -51,12 +52,12 @@ std::string Tile::getTileKey(uint32_t x, uint32_t y, uint32_t z) {
   return std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
 }
 
-std::pair<double, double> Tile::convertLatLongToTileXY(float latitude, float longitude, uint8_t zoom) {
-  const double latRad = (latitude * M_PI) / 180.0;
+std::pair<double, double> Tile::convertLatLongToTileXY(double latitude, double longitude, uint8_t zoom) {
+  const double latRad = degreesToRadians(latitude);
   const auto n = double(pow(2.0, zoom));
 
   const double x = ((longitude + 180.0) / 360.0) * n;
-  const double y = ((1.0 - asinh(tan(latRad)) / double(M_PI)) / 2.0) * n;
+  const double y = ((1.0 - asinh(tan(latRad)) / M_PI) / 2.0) * n;
 
   return std::make_pair(std::fmod(x, n), std::fmod(y, n));
 }

@@ -36,7 +36,7 @@ void Tour::clear(uint16_t expectedPointsCount) {
   this->points.reserve(expectedPointsCount);
 }
 
-void Tour::pushPoint(uint16_t pointIndex, float latitude, float longitude) {
+void Tour::pushPoint(uint16_t pointIndex, double latitude, double longitude) {
   Point point = {pointIndex, latitude, longitude};
   this->points.push_back(point);
   this->clusterPoint(point);
@@ -63,7 +63,7 @@ void Tour::clusterPoint(Tour::Point point) {
   }
 }
 
-std::vector<Tour::ClusteredPoint> &Tour::getNearbyPoints(float latitude, float longitude, uint8_t tileRadius) {
+std::vector<Tour::ClusteredPoint> &Tour::getNearbyPoints(double latitude, double longitude, uint8_t tileRadius) {
   auto centerTileXY = Tile::convertLatLongToTileXY(latitude, longitude, this->zoom);
 
   if (this->nearbyPointsCache.centerTileX == uint32_t(std::get<0>(centerTileXY)) &&
