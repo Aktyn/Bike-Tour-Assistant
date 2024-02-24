@@ -196,8 +196,10 @@ void renderer::renderMap(
   auto accuracyPixelsRadius = uint16_t(location.accuracy / metersPerPixel);
 //  DEBUG("metersPerPixel: %f; map zoom: %u, accuracy pixel radius: %u\n", metersPerPixel, mapZoom, accuracyPixelsRadius);
   uint16_t radius = std::min(accuracyPixelsRadius, uint16_t(MAP_WIDTH / 2));
-  Paint_DrawCircle(centerX, centerY, radius,
-                   CYAN, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+  if (radius > 1) {
+    Paint_DrawCircle(centerX, centerY, radius,
+                     CYAN, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+  }
 
   drawImageBuffer(buffer, 0, LCD_2IN4_HEIGHT - MAP_HEIGHT, MAP_WIDTH, MAP_HEIGHT);
   free(buffer);
