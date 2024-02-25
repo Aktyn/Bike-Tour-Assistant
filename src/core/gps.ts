@@ -1,10 +1,12 @@
 import EventEmitter from 'events'
 import * as Location from 'expo-location'
 import { type LocationObject } from 'expo-location'
+import BackgroundTimer, { type TimeoutId } from 'react-native-background-timer'
 import { requestBackgroundLocationPermissions } from './common'
 import type { DeviceSettingsSchema } from './deviceSettings'
 import { Config } from '../config'
 import { pick } from '../utils'
+import { mockTour } from '../utils/gpsTourMock'
 
 export type LocationState = {
   timestamp: number
@@ -58,6 +60,7 @@ export class GPS extends GPSEventEmitter {
     gpsTimeInterval: number
     gpsDistanceSensitivity: number
   } | null = null
+  private tourMockTimeout: TimeoutId | null = null
 
   async destroy() {
     super.removeAllListeners()
@@ -132,9 +135,34 @@ export class GPS extends GPSEventEmitter {
         notificationColor: '#fff',
       },
     })
+
+    if (Config.MOCK_TOUR) {
+      let index = 0
+      let lastMockTimestamp = mockTour[0].timestamp
+      const sendNextMockLocation = () => {
+        if (index >= mockTour.length) {
+          this.tourMockTimeout = null
+          return
+        }
+        const mockLocation = mockTour[index++]
+
+        this.tourMockTimeout = BackgroundTimer.setTimeout(() => {
+          this.emit('locationUpdate', mockLocation)
+          sendNextMockLocation()
+        }, mockLocation.timestamp - lastMockTimestamp)
+
+        lastMockTimestamp = mockLocation.timestamp
+      }
+      sendNextMockLocation()
+    }
   }
 
   async stopObservingLocation() {
+    if (Config.MOCK_TOUR && this.tourMockTimeout) {
+      BackgroundTimer.clearTimeout(this.tourMockTimeout)
+      this.tourMockTimeout = null
+    }
+
     try {
       console.info('Stopping location updates')
       this.locationObservingOptions = null

@@ -10,7 +10,7 @@ TaskManager.defineTask(
       console.error(error)
       return
     }
-    if (data) {
+    if (data && !Config.MOCK_TOUR) {
       const { locations } = data as { locations: LocationObject[] }
       const location = locations[0]
 
