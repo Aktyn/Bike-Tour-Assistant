@@ -2,6 +2,9 @@
 #define BIKETOURASSISTANT_CORE_COMMON_H
 
 #include <cstdint>
+#include <iostream>
+#include <vector>
+#include <map>
 
 extern "C"
 {
@@ -24,8 +27,19 @@ struct Location {
   double altitude;
   double altitudeAccuracy;
   double accuracy;
+
   uint64_t timestamp;
   uint64_t previousUpdateTimestamp;
 };
+
+struct Icons {
+  std::vector<uint8_t> directionArrowImageData;
+  std::pair<uint16_t, uint16_t> directionArrowSize;
+  std::vector<uint8_t> slopeUphillImageData;
+  std::vector<uint8_t> slopeDownhillImageData;
+  std::pair<uint16_t, uint16_t> slopeIconSize;
+};
+
+double calculateSlope(const std::vector<Location> &locationHistory);
 
 #endif //BIKETOURASSISTANT_CORE_COMMON_H

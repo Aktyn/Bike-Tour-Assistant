@@ -5,23 +5,39 @@
 
 #include <cmath>
 
+#define INACTIVITY_TIMEOUT 60000 // 1 minute in milliseconds
+
 Core &CORE = Core::getInstance();
 
-Core::Core() : isBluetoothConnected(false), isRunning(false),
-               needMapRedraw(false), needDirectionRedraw(false), needSpeedRedraw(false),
-               fetchingTile(nullptr), location({0, 0, 0, 0, 0, 0}) {
+Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false), backlightLightness(100),
+               needMapRedraw(false), needSpeedRedraw(false), needDirectionRedraw(false), needSlopeRedraw(false),
+               fetchingTile(nullptr),
+               location({
+                            0.0, 0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.0,
+                            0, 0}) {
   this->mapZoom = 0; // 0 means there is no tiles registered yet
+  this->locationHistory.reserve(LOCATION_HISTORY_SIZE);
 
-  this->directionArrowSize = loadPngFile(
-      this->directionArrowImageData,
+  this->icons.directionArrowSize = loadPngFile(
+      this->icons.directionArrowImageData,
       "../assets/direction_arrow_40x40.png", LCT_RGBA
   );
-  DEBUG("Direction arrow size: %dx%d\n", this->directionArrowSize.first, this->directionArrowSize.second);
+  this->icons.slopeIconSize = loadPngFile(
+      this->icons.slopeUphillImageData,
+      "../assets/slope_uphill.png", LCT_RGBA
+  ) = loadPngFile(
+      this->icons.slopeDownhillImageData,
+      "../assets/slope_downhill.png", LCT_RGBA
+  );
 }
 
 Core::~Core() {
   this->clearTiles();
-  this->directionArrowImageData.clear();
+  this->icons.directionArrowImageData.clear();
+  this->icons.slopeUphillImageData.clear();
+  this->icons.slopeDownhillImageData.clear();
+  this->locationHistory.clear();
 }
 
 void Core::start() {
@@ -34,6 +50,39 @@ void Core::reset() {
   this->needMapRedraw = true;
   this->needSpeedRedraw = true;
   this->needDirectionRedraw = true;
+  this->registerActivity();
+}
+
+void Core::update() {
+  if (!this->isBluetoothConnected) {
+    return;
+  }
+
+  this->battery.update();
+
+  if (!this->isInactive) {
+    auto now = std::chrono::system_clock::now();
+    auto delta = std::chrono::duration_cast<milliseconds>(now - this->lastActivityTime);
+
+    if (delta.count() >= INACTIVITY_TIMEOUT) {
+      DEBUG("No activity for %u seconds, turning off the display\n", INACTIVITY_TIMEOUT / 1000);
+      this->isInactive = true;
+      LCD_SetBacklight(0);
+    }
+  }
+}
+
+void Core::registerActivity() {
+  if (this->isInactive) {
+    this->isInactive = false;
+    LCD_SetBacklight(this->backlightLightness * 10);
+  }
+  this->lastActivityTime = std::chrono::system_clock::now();
+}
+
+void Core::setBacklight(uint8_t lightness) {
+  LCD_SetBacklight(lightness * 10);
+  this->backlightLightness = lightness;
 }
 
 void Core::clearTiles() {
@@ -70,6 +119,7 @@ void Core::appendTileImageData(uint16_t chunkIndex, uint8_t *data) {
     std::cout << "Tile " << this->fetchingTile->key << " is fully loaded" << std::endl;
     this->fetchingTile = nullptr;
     this->needMapRedraw = true;
+    this->registerActivity();
   }
 }
 
@@ -82,12 +132,14 @@ void Core::updateLocation(
   if (std::round(this->location.speed) != std::round(metersPerSecondToKmPerHour(speed))) {
     this->location.speed = metersPerSecondToKmPerHour(speed);
     this->needSpeedRedraw = true;
+    this->registerActivity();
   }
 
   if (std::round(this->location.heading) != std::round(heading)) {
     this->location.heading = heading;
     this->needMapRedraw = true;
     this->needDirectionRedraw = true;
+    this->registerActivity();
   }
 
   double positionDifference = distanceBetweenCoordinates(
@@ -100,15 +152,22 @@ void Core::updateLocation(
     this->location.latitude = latitude;
     this->location.longitude = longitude;
     this->needMapRedraw = true;
+    this->registerActivity();
   }
 
-  //TODO: calculate and display current slope based on those values
   this->location.altitude = altitude;
   this->location.altitudeAccuracy = altitudeAccuracy;
   this->location.accuracy = accuracy;
 
+  this->needSlopeRedraw = true;
+
   this->location.timestamp = timestamp;
   this->location.previousUpdateTimestamp = previousUpdateTimestamp;
+
+  this->locationHistory.push_back(this->location);
+  while (this->locationHistory.size() > LOCATION_HISTORY_SIZE) {
+    this->locationHistory.erase(this->locationHistory.begin());
+  }
 }
 
 void Core::drawMap() {
@@ -119,17 +178,18 @@ void Core::drawMap() {
   }
 }
 
+double Core::getSlope() const {
+  return calculateSlope(this->locationHistory);
+}
+
 uint8_t Core::getMapZoom() const {
   return this->mapZoom;
 }
 
-const std::vector<uint8_t> &Core::getDirectionArrowImageData() const {
-  return directionArrowImageData;
+const Icons &Core::getIcons() const {
+  return this->icons;
 }
 
-const std::pair<uint16_t, uint16_t> &Core::getDirectionArrowSize() const {
-  return directionArrowSize;
-}
 
 bool isBluetoothDisconnected() {
   return !CORE.isBluetoothConnected;

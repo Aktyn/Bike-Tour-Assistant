@@ -9,6 +9,13 @@
 #include <cstdint>
 #include <iostream>
 #include <map>
+#include <chrono>
+
+#define LOCATION_HISTORY_SIZE 8
+
+using milliseconds = std::chrono::milliseconds;
+using nanoseconds = std::chrono::nanoseconds;
+using timestamp = std::chrono::time_point<std::chrono::system_clock, nanoseconds>;
 
 class Core {
 public:
@@ -31,10 +38,17 @@ public:
   bool needMapRedraw;
   bool needSpeedRedraw;
   bool needDirectionRedraw;
+  bool needSlopeRedraw;
 
   void start();
 
   void reset();
+
+  void update();
+
+  void registerActivity();
+
+  void setBacklight(uint8_t lightness);
 
   void registerTile(uint32_t x, uint32_t y, uint32_t z, uint32_t dataByteLength);
 
@@ -46,12 +60,11 @@ public:
 
   void drawMap();
 
+  double getSlope() const;
+
   uint8_t getMapZoom() const;
 
-  const std::vector<uint8_t> &getDirectionArrowImageData() const;
-
-  const std::pair<uint16_t, uint16_t> &getDirectionArrowSize() const;
-
+  const Icons &getIcons() const;
 private:
   Core();
 
@@ -59,14 +72,16 @@ private:
 
   void clearTiles();
 
+  timestamp lastActivityTime;
+  bool isInactive;
+  uint8_t backlightLightness; // 0-100
+
   std::map<std::string, Tile *> tiles;
   Tile *fetchingTile;
   uint8_t mapZoom;
 
-  std::vector<uint8_t> directionArrowImageData;
-
-private:
-  std::pair<uint16_t, uint16_t> directionArrowSize;
+  Icons icons;
+  std::vector <Location> locationHistory;
 };
 
 extern Core &CORE;

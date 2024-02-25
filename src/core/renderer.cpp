@@ -215,7 +215,7 @@ void renderer::drawSpeed(double speed) {
                WHITE, backgroundColor, &Font50, ALIGN_CENTER);
 }
 
-void renderer::drawBattery(uint8_t percentage) {
+void renderer::drawBattery(uint8_t percentage, bool isOverheated) {
   const uint16_t imageWidth = TOP_PANEL_HEIGHT;
   const uint16_t imageHeight = TOP_PANEL_HEIGHT;
   const uint16_t widgetWidth = imageWidth / 3;
@@ -236,6 +236,7 @@ void renderer::drawBattery(uint8_t percentage) {
       uint8_t(mix(115, 214, factor)),
       uint8_t(mix(115, 167, factor))
   );
+  auto errorColor = RGB(229, 115, 115);
 
   Paint_NewImage(imageBuffer, imageWidth, imageHeight, 0, WHITE, 16);
   Paint_Clear(backgroundColor);
@@ -253,17 +254,20 @@ void renderer::drawBattery(uint8_t percentage) {
   Paint_DrawString_EN(aligned_x, imageHeight / 2 + gapY / 2, batteryPercentageText.c_str(), &Font16,
                       backgroundColor, batteryColor);
 
+  if (isOverheated) {
+    Paint_DrawString_EN(0, 0, "TOO HOT", &Font16,
+                        backgroundColor, errorColor);
+  }
+
   drawImageBuffer(imageBuffer, 0, 0, imageWidth, imageHeight);
   free(imageBuffer);
   imageBuffer = nullptr;
 }
 
-void renderer::drawDirectionArrow(
-    double heading,
-    const std::vector<uint8_t> &imageData, const std::pair<uint16_t, uint16_t> &size
-) {
-  const uint16_t imageWidth = size.first;
-  const uint16_t imageHeight = size.second;
+void renderer::drawDirectionArrow(double heading, const Icons &icons) {
+  const uint16_t imageWidth = icons.directionArrowSize.first;
+  const uint16_t imageHeight = icons.directionArrowSize.second;
+  const auto imageData = icons.directionArrowImageData;
 
   uint16_t *imageBuffer = allocateImageBuffer(imageWidth, imageHeight);
   if (imageBuffer == nullptr) {
@@ -298,6 +302,56 @@ void renderer::drawDirectionArrow(
   }
 
   drawImageBuffer(imageBuffer, LCD_2IN4_WIDTH - imageWidth, 0, imageWidth, imageHeight);
+  free(imageBuffer);
+  imageBuffer = nullptr;
+}
+
+void renderer::drawSlope(double slope, const Icons &icons) {
+  const uint16_t imageWidth = TOP_PANEL_HEIGHT;
+  const uint16_t imageHeight = TOP_PANEL_HEIGHT / 2;
+
+  uint16_t *imageBuffer = allocateImageBuffer(imageWidth, imageHeight);
+  if (imageBuffer == nullptr) {
+    return;
+  }
+
+  Paint_NewImage(imageBuffer, imageWidth, imageHeight, 0, WHITE, 24);
+  Paint_Clear(backgroundColor);
+
+  const auto imageData = slope >= 0 ? icons.slopeUphillImageData : icons.slopeDownhillImageData;
+  const auto textColor = slope >= 0 ? RGB(255, 235, 238) : RGB(232, 245, 233);
+
+  uint8_t iconColorRed = 176;
+  uint8_t iconColorGreen = 190;
+  uint8_t iconColorBlue = 197;
+
+  for (uint16_t y = 0; y < icons.slopeIconSize.second; y++) {
+    for (uint16_t x = 0; x < icons.slopeIconSize.first; x++) {
+      uint16_t index =
+          ((imageHeight - icons.slopeIconSize.second) / 2 + (icons.slopeIconSize.second - 1 - y)) * imageWidth +
+          (icons.slopeIconSize.first - 1 - x);
+      uint16_t pixelIndex = y * icons.slopeIconSize.second + x;
+
+      auto alphaFactor = double(imageData[pixelIndex * 4 + 3]) / 255.0;
+      auto r = uint8_t(double(imageData[pixelIndex * 4 + 0]) / 255.0 * double(iconColorRed));
+      auto g = uint8_t(double(imageData[pixelIndex * 4 + 1]) / 255.0 * double(iconColorGreen));
+      auto b = uint8_t(double(imageData[pixelIndex * 4 + 2]) / 255.0 * double(iconColorBlue));
+      imageBuffer[index] = convertRgbColor(
+          RGB(
+              uint8_t(mix(BACKGROUND_RED, r, alphaFactor)),
+              uint8_t(mix(BACKGROUND_GREEN, g, alphaFactor)),
+              uint8_t(mix(BACKGROUND_BLUE, b, alphaFactor))
+          )
+      );
+    }
+  }
+
+  std::string slopeText = std::to_string((uint16_t) round(radiansToDegrees(slope))) + "deg";
+  auto aligned_x = MAX(0, int16_t(imageWidth) -icons.slopeIconSize.first - int16_t(Font16.Width) * slopeText.length());
+  Paint_DrawString_EN(uint16_t(aligned_x), (imageHeight - Font16.Height) / 2, slopeText.c_str(), &Font16,
+                      backgroundColor, textColor);
+
+  drawImageBuffer(imageBuffer, LCD_2IN4_WIDTH - imageWidth, TOP_PANEL_HEIGHT / 2, imageWidth, imageHeight);
   free(imageBuffer);
   imageBuffer = nullptr;
 }

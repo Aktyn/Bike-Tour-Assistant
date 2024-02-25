@@ -21,10 +21,11 @@ namespace renderer {
 
   void drawSpeed(double speed);
 
-  void drawBattery(uint8_t percentage);
+  void drawBattery(uint8_t percentage, bool isOverheated);
 
-  void drawDirectionArrow(double heading,
-                          const std::vector<uint8_t> &imageData, const std::pair<uint16_t, uint16_t> &size);
+  void drawDirectionArrow(double heading, const Icons &icons);
+
+  void drawSlope(double slope, const Icons &icons);
 }
 
 #endif //BIKETOURASSISTANT_RENDERER_H

@@ -28,6 +28,8 @@ void *displayThread(void *args) {
     CORE.reset();
 
     while (CORE.isBluetoothConnected) {
+      CORE.update();
+
       if (CORE.needMapRedraw) {
         CORE.needMapRedraw = false;
 
@@ -47,18 +49,17 @@ void *displayThread(void *args) {
 
       if (CORE.needDirectionRedraw) {
         CORE.needDirectionRedraw = false;
-        renderer::drawDirectionArrow(
-            CORE.location.heading,
-            CORE.getDirectionArrowImageData(), CORE.getDirectionArrowSize()
-        );
+        renderer::drawDirectionArrow(CORE.location.heading, CORE.getIcons());
       }
 
+      if (CORE.needSlopeRedraw) {
+        CORE.needSlopeRedraw = false;
+        renderer::drawSlope(CORE.getSlope(), CORE.getIcons());
+      }
 
-      //TODO: monitor battery level
-      // CORE.battery.update(); //TODO: update every N seconds
       if (CORE.battery.needRedraw) {
         CORE.battery.needRedraw = false;
-        renderer::drawBattery(CORE.battery.getPercentage());
+        renderer::drawBattery(CORE.battery.getPercentage(), CORE.battery.isOverheated());
       }
 
       // sleep for 16ms
@@ -102,7 +103,7 @@ void handleMessage(unsigned char *data) {
     case 2: { //SET_LIGHTNESS
       std::cout << "Setting backlight to: " << std::to_string((uint8_t) data[1]) << "%" << std::endl;
       uint8_t lightness = data[1];
-      LCD_SetBacklight(lightness * 10);
+      CORE.setBacklight(lightness);
     }
       break;
     case 3: //TAKE_PHOTO

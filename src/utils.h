@@ -2,6 +2,10 @@
 #define __UTILS_H
 
 #include <stdint.h>
+#include <vector>
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 char *executeCommand(const char *command);
 
@@ -33,6 +37,11 @@ double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double 
 
 double degreesToRadians(double degrees);
 
+double radiansToDegrees(double radians);
+
 double mix(double a, double b, double mix);
+
+template<typename T>
+T calculateLinearlyWeightedAverage(const std::vector<T> &values);
 
 #endif // __UTILS_H

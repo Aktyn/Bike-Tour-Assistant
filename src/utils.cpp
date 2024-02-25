@@ -228,10 +228,10 @@ double metersPerSecondToKmPerHour(double metersPerSecond) {
 
 double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double lon2) {
   const double R = 6371e3; // metres
-  const double phi1 = lat1 * M_PI / 180; // φ, λ in radians
-  const double phi2 = lat2 * M_PI / 180;
-  const double deltaPhi = (lat2 - lat1) * M_PI / 180;
-  const double deltaLambda = (lon2 - lon1) * M_PI / 180;
+  const double phi1 = degreesToRadians(lat1); // φ, λ in radians
+  const double phi2 = degreesToRadians(lat2);
+  const double deltaPhi = degreesToRadians(lat2 - lat1);
+  const double deltaLambda = degreesToRadians(lon2 - lon1);
 
   const double a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
                    cos(phi1) * cos(phi2) *
@@ -245,7 +245,28 @@ double degreesToRadians(double degrees) {
   return (degrees * M_PI) / 180.0;
 }
 
+double radiansToDegrees(double radians) {
+  return (radians * 180.0) / M_PI;
+
+}
+
 double mix(double a, double b, double mix) {
   return a * (1.0 - mix) + b * mix;
 }
 
+template<typename T>
+T calculateLinearlyWeightedAverage(const std::vector<T> &values) {
+  static_assert(std::is_arithmetic<T>::value, "Type must be numeric");
+
+  T sum = 0;
+  size_t sumOfWeights = 0;
+
+  for (size_t i = 0; i < values.size(); i++) {
+    sum += values[i] * (i + 1);
+    sumOfWeights += i + 1;
+  }
+
+  return sum / T(sumOfWeights);
+}
+
+template double calculateLinearlyWeightedAverage<double>(const std::vector<double> &values);
