@@ -1,13 +1,15 @@
 #include "camera.h"
 #include "utils.h"
 #include "Debug.h"
+#include "LCD_2inch4.h"
+#include "display/draw.h"
+#include "core/core.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <libgen.h>
-#include <limits.h>
-#include <time.h>
+#include <climits>
+#include <ctime>
 
 std::string takePhoto(void)
 {
@@ -55,4 +57,19 @@ std::string takePhoto(void)
   }
 
   return std::string(photos_path) + "/" + std::to_string(current_time) + ".jpg";
+}
+
+void *takePhotoAsync(void *args) {
+  std::cout << "Taking photo" << std::endl;
+  std::string file_path = takePhoto();
+  if (file_path.empty()) {
+    std::cout << "Error taking photo" << std::endl;
+    return nullptr;
+  }
+
+  if (CORE.isBluetoothConnected) {
+    drawImageFromJpgFile(file_path.c_str(), 0, 0, LCD_2IN4_WIDTH);
+  }
+
+  return nullptr;
 }

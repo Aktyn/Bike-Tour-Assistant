@@ -28,6 +28,8 @@ public:
     return instance;
   }
 
+  unsigned char messageOutBuffer[64];
+
   Tour tour;
   Location location;
   Battery battery;

@@ -11,4 +11,6 @@
  */
 std::string takePhoto(void);
 
+void *takePhotoAsync(void *args);
+
 #endif // __CAMERA_H

@@ -5,18 +5,18 @@
 
 #include <cmath>
 
-#define INACTIVITY_TIMEOUT 60000 // 1 minute in milliseconds
+#define INACTIVITY_TIMEOUT 120000 // 2 minutes in milliseconds
 
 Core &CORE = Core::getInstance();
 
 Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false), backlightLightness(100),
                needMapRedraw(false), needSpeedRedraw(false), needDirectionRedraw(false), needSlopeRedraw(false),
-               fetchingTile(nullptr),
+               fetchingTile(nullptr), messageOutBuffer{0},
                location({
                             0.0, 0.0, 0.0, 0.0,
                             0.0, 0.0, 0.0,
                             0, 0}) {
-  this->mapZoom = 0; // 0 means there is no tiles registered yet
+  this->mapZoom = 0; // 0 means there are no tiles registered yet
   this->locationHistory.reserve(LOCATION_HISTORY_SIZE);
 
   this->icons.directionArrowSize = loadPngFile(
@@ -30,6 +30,8 @@ Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false),
       this->icons.slopeDownhillImageData,
       "../assets/slope_downhill.png", LCT_RGBA
   );
+
+  memset(this->messageOutBuffer, 0, sizeof(this->messageOutBuffer));
 }
 
 Core::~Core() {
@@ -58,9 +60,9 @@ void Core::update() {
     return;
   }
 
-  this->battery.update();
-
   if (!this->isInactive) {
+    this->battery.update();
+
     auto now = std::chrono::system_clock::now();
     auto delta = std::chrono::duration_cast<milliseconds>(now - this->lastActivityTime);
 
