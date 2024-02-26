@@ -149,6 +149,7 @@ export class GPS extends GPSEventEmitter {
         this.tourMockTimeout = BackgroundTimer.setTimeout(() => {
           this.emit('locationUpdate', mockLocation)
           sendNextMockLocation()
+          //TODO: speed it up by dividing the difference by speed factor
         }, mockLocation.timestamp - lastMockTimestamp)
 
         lastMockTimestamp = mockLocation.timestamp

@@ -123,3 +123,7 @@ export function parseMessageData(message: Message) {
   buffer.writeUInt8(message.type, 0)
   return buffer.toString('base64')
 }
+
+export function parseBase64(value: string) {
+  return Buffer.from(value, 'base64')
+}

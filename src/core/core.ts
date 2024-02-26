@@ -90,6 +90,11 @@ export class Core {
       this.tilesToSendQueue = []
     })
 
+    this.bluetooth.on('messageReceived', (message) => {
+      //TODO: handle received messages
+      console.log('Received message:', Uint8Array.from(message))
+    })
+
     this.deviceSettings.on('change', (settings, key) => {
       if (!this.bluetooth.isConnectedToDevice()) {
         return

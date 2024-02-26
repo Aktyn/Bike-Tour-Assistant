@@ -1,7 +1,7 @@
 import EventEmitter from 'events'
 import { BleManager, State, type Device } from 'react-native-ble-plx'
 import { requestBluetoothPermission } from './common'
-import { parseMessageData, type Message } from './message'
+import { parseMessageData, type Message, parseBase64 } from './message'
 import { Config } from '../config'
 import { wait } from '../utils'
 
@@ -43,6 +43,10 @@ declare interface BluetoothEventEmitter {
   on(event: 'isScanning', listener: (isScanning: boolean) => void): this
   off(event: 'isScanning', listener: (isScanning: boolean) => void): this
   emit(event: 'isScanning', isScanning: boolean): boolean
+
+  on(event: 'messageReceived', listener: (message: Buffer) => void): this
+  off(event: 'messageReceived', listener: (message: Buffer) => void): this
+  emit(event: 'messageReceived', message: Buffer): boolean
 }
 
 class BluetoothEventEmitter extends EventEmitter {}
@@ -197,6 +201,7 @@ export class Bluetooth extends BluetoothEventEmitter {
         subscription.remove()
       })
       this.emit('deviceConnected', device)
+      this.startReadingData().catch(console.error)
       console.info('Connected to target device:', device.id, device.name)
     } catch (error) {
       console.error(
@@ -214,6 +219,50 @@ export class Bluetooth extends BluetoothEventEmitter {
       return
     }
     await this.connectedDevice.cancelConnection()
+  }
+
+  private async startReadingData() {
+    if (!this.connectedDevice || !(await this.connectedDevice.isConnected())) {
+      throw new Error('Device not connected')
+    }
+
+    const services = await this.connectedDevice.services()
+    const targetService = services.at(-1)
+    if (!targetService) {
+      throw new Error('No services found')
+    }
+
+    const characteristics =
+      await this.connectedDevice.characteristicsForService(targetService.uuid)
+    const readableCharacteristic = characteristics.find(
+      (char) => char.isReadable,
+    )
+    if (!readableCharacteristic) {
+      throw new Error('No readable characteristics found')
+    }
+
+    let lastMessageIndex = 0
+
+    try {
+      while (this.connectedDevice) {
+        const ch = await readableCharacteristic.read()
+
+        if (ch.value) {
+          const responseData = parseBase64(ch.value)
+          if (responseData[0] === 0x0d && responseData[1] === 0x25) {
+            const messageIndex = responseData.readUint32LE(2)
+            if (messageIndex > lastMessageIndex) {
+              lastMessageIndex = messageIndex
+              this.emit('messageReceived', responseData)
+            }
+          }
+        }
+
+        await wait(200)
+      }
+    } catch (error) {
+      console.error('Error', error)
+    }
   }
 
   //TODO: handle errors, optimize loading services and characteristics
@@ -248,10 +297,10 @@ export class Bluetooth extends BluetoothEventEmitter {
     const characteristics =
       await this.connectedDevice.characteristicsForService(targetService.uuid)
     const writeableCharacteristic = characteristics.findLast(
-      (char) => char.isWritableWithoutResponse,
+      (char) => char.isWritableWithoutResponse || char.isWritableWithResponse,
     )
     if (!writeableCharacteristic) {
-      throw new Error('No characteristics found')
+      throw new Error('No writeable characteristics found')
     }
 
     const messageData = parseMessageData(message)
