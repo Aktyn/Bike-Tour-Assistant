@@ -1,5 +1,4 @@
 import EventEmitter from 'events'
-import { convertLatLongToTile } from '../utils'
 
 const serverLetters = ['a', 'b', 'c']
 
@@ -21,29 +20,17 @@ declare interface MapProviderEventEmitter {
 class MapProviderEventEmitter extends EventEmitter {}
 
 export class MapProvider extends MapProviderEventEmitter {
-  private readonly tilesRadius = 1
-  private readonly tileResolution = 256
   //TODO: option for selecting tiles provider
   private readonly tilesProvider =
     'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
   // 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
   // https://wiki.openstreetmap.org/wiki/Raster_tile_providers
 
-  private zoom = 16
   private readonly serverLetter = getRandomServerLetter()
 
   private loadedTiles = new Map<TileURL, Tile>()
   private tilesToLoad = new Map<TileURL, Omit<Tile, 'fileData'>>()
   private loadingTile = false
-
-  setZoom(zoom: number) {
-    if (zoom === this.zoom) {
-      return
-    }
-
-    this.reset()
-    this.zoom = zoom
-  }
 
   destroy() {
     this.removeAllListeners()
@@ -55,32 +42,22 @@ export class MapProvider extends MapProviderEventEmitter {
     this.tilesToLoad.clear()
   }
 
-  update(latitude: number, longitude: number) {
-    const { x, y } = convertLatLongToTile(latitude, longitude, this.zoom)
-
-    this.loadTile(x, y)
-    for (let i = -this.tilesRadius; i <= this.tilesRadius; i++) {
-      for (let j = -this.tilesRadius; j <= this.tilesRadius; j++) {
-        if (i === 0 && j === 0) {
-          continue
-        }
-        this.loadTile(x + i, y + j)
-      }
-    }
+  requestTile(x: number, y: number, z: number) {
+    this.loadTile(x, y, z)
   }
 
-  private loadTile(x: number, y: number) {
+  private loadTile(x: number, y: number, z: number) {
     const url = this.tilesProvider
       .replace(/\{s\}/gi, this.serverLetter)
-      .replace(/\{z\}/gi, this.zoom.toString())
       .replace(/\{x\}/gi, x.toString())
       .replace(/\{y\}/gi, y.toString())
+      .replace(/\{z\}/gi, z.toString())
 
     if (this.loadedTiles.has(url) || this.tilesToLoad.has(url)) {
       return
     }
 
-    this.tilesToLoad.set(url, { x, y, z: this.zoom })
+    this.tilesToLoad.set(url, { x, y, z })
     this.fetchNextTile()
   }
 

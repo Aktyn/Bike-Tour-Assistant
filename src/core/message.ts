@@ -14,9 +14,15 @@ export enum MessageType {
   CLEAR_TOUR_DATA,
   SEND_TOUR_START,
   SEND_TOUR_DATA_CHUNK,
+  CONFIRM_RECEIVED_MESSAGE,
 }
 
-type MessageBase<T extends MessageType, DataType> = {
+export enum IncommingMessageType {
+  PONG = 1,
+  MESSAGE_OUT_REQUEST_TILE,
+}
+
+type MessageBase<T extends MessageType | IncommingMessageType, DataType> = {
   type: T
   data: DataType
 }
@@ -25,7 +31,10 @@ export type Message =
   | MessageBase<MessageType.PING, null>
   | MessageBase<MessageType.SET_LIGHTNESS, { lightness: number }>
   | MessageBase<MessageType.TAKE_PHOTO, null>
-  | MessageBase<MessageType.LOCATION_UPDATE, LocationState>
+  | MessageBase<
+      MessageType.LOCATION_UPDATE,
+      { location: LocationState; mapZoom: number }
+    >
   | MessageBase<
       MessageType.SEND_MAP_TILE_START,
       {
@@ -40,6 +49,7 @@ export type Message =
   | MessageBase<MessageType.CLEAR_TOUR_DATA, null>
   | MessageBase<MessageType.SEND_TOUR_START, { pointsCount: number }>
   | MessageBase<MessageType.SEND_TOUR_DATA_CHUNK, TourPoint[]>
+  | MessageBase<MessageType.CONFIRM_RECEIVED_MESSAGE, null>
 
 /** Returns base64 representation of buffer (224 bytes limit) */
 export function parseMessageData(message: Message) {
@@ -50,6 +60,7 @@ export function parseMessageData(message: Message) {
     case MessageType.PING:
     case MessageType.TAKE_PHOTO:
     case MessageType.CLEAR_TOUR_DATA:
+    case MessageType.CONFIRM_RECEIVED_MESSAGE:
       buffer = Buffer.alloc(1)
       break
     case MessageType.SET_LIGHTNESS:
@@ -57,7 +68,7 @@ export function parseMessageData(message: Message) {
       buffer.writeUInt8(Math.floor(message.data.lightness), 1)
       break
     case MessageType.LOCATION_UPDATE:
-      buffer = Buffer.alloc(65)
+      buffer = Buffer.alloc(66)
 
       /** 
        * Example message.data:
@@ -69,21 +80,22 @@ export function parseMessageData(message: Message) {
             timestamp: 1708199578000,
           }
         */
-      buffer.writeDoubleLE(message.data.latitude, 1)
-      buffer.writeDoubleLE(message.data.longitude, 9)
-      buffer.writeDoubleLE(message.data.speed, 17)
-      buffer.writeDoubleLE(message.data.heading, 25)
-      buffer.writeDoubleLE(message.data.altitude, 33)
-      buffer.writeDoubleLE(message.data.altitudeAccuracy, 41)
-      buffer.writeDoubleLE(message.data.accuracy, 49)
-      buffer.writeBigUInt64LE(BigInt(message.data.timestamp), 57)
+      buffer.writeDoubleLE(message.data.location.latitude, 1)
+      buffer.writeDoubleLE(message.data.location.longitude, 9)
+      buffer.writeDoubleLE(message.data.location.speed, 17)
+      buffer.writeDoubleLE(message.data.location.heading, 25)
+      buffer.writeDoubleLE(message.data.location.altitude, 33)
+      buffer.writeDoubleLE(message.data.location.altitudeAccuracy, 41)
+      buffer.writeDoubleLE(message.data.location.accuracy, 49)
+      buffer.writeBigUInt64LE(BigInt(message.data.location.timestamp), 57)
+      buffer.writeUInt8(message.data.mapZoom, 65)
       break
     case MessageType.SEND_MAP_TILE_START:
-      buffer = Buffer.alloc(17)
+      buffer = Buffer.alloc(14)
       buffer.writeUint32LE(message.data.tileIdentifier.x, 1)
       buffer.writeUint32LE(message.data.tileIdentifier.y, 5)
-      buffer.writeUint32LE(message.data.tileIdentifier.z, 9)
-      buffer.writeUint32LE(message.data.fileSize, 13)
+      buffer.writeUint8(message.data.tileIdentifier.z, 9)
+      buffer.writeUint32LE(message.data.fileSize, 10)
       break
     case MessageType.SEND_MAP_TILE_DATA_CHUNK:
       {

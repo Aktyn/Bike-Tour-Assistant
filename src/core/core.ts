@@ -4,7 +4,7 @@ import { DeviceSettings, type DeviceSettingsSchema } from './deviceSettings'
 import { GPS, type LocationState } from './gps'
 import { parseGpxFile } from './gpxParser'
 import { MapProvider, type Tile } from './mapProvider'
-import { MessageType } from './message'
+import { IncommingMessageType, MessageType } from './message'
 import { Config } from '../config'
 import { debounce, pick } from '../utils'
 
@@ -55,6 +55,11 @@ export class Core {
     this.bluetooth.on('deviceConnected', () => {
       try {
         this.pingMessageInterval = BackgroundTimer.setInterval(() => {
+          //Skip sending ping message if there are at least 2 messages in the queue
+          if (this.bluetooth.getSendingMessageQueueLength() >= 2) {
+            return
+          }
+
           this.bluetooth
             .sendMessage(
               { type: MessageType.PING, data: null },
@@ -91,8 +96,31 @@ export class Core {
     })
 
     this.bluetooth.on('messageReceived', (message) => {
-      //TODO: handle received messages
-      console.log('Received message:', Uint8Array.from(message))
+      const type: IncommingMessageType = message[6]
+      switch (type) {
+        default:
+          console.warn('Unknown incomming message type:', type)
+          break
+        case IncommingMessageType.PONG:
+          console.info('Pong')
+          break
+        case IncommingMessageType.MESSAGE_OUT_REQUEST_TILE:
+          {
+            const tileX = message.readUint32LE(7)
+            const tileY = message.readUint32LE(11)
+            const tileZ = message.readUint8(15)
+            console.info('Requesting tile:', tileX, tileY, tileZ)
+            this.mapProvider.requestTile(tileX, tileY, tileZ)
+          }
+          break
+      }
+
+      this.bluetooth
+        .sendMessage(
+          { type: MessageType.CONFIRM_RECEIVED_MESSAGE, data: null },
+          MessagePriority.VERY_HIGH,
+        )
+        .catch(console.error)
     })
 
     this.deviceSettings.on('change', (settings, key) => {
@@ -102,9 +130,6 @@ export class Core {
 
       if (!key || key === 'lightness') {
         broadcastLightnessUpdate(settings.lightness)
-      }
-      if (!key || key === 'mapZoom') {
-        this.mapProvider.setZoom(settings.mapZoom)
       }
       if (!key || key === 'gpxFile') {
         void this.synchronizeTour(settings.gpxFile)
@@ -148,13 +173,14 @@ export class Core {
       .sendMessage(
         {
           type: MessageType.LOCATION_UPDATE,
-          data: locationState,
+          data: {
+            location: locationState,
+            mapZoom: this.deviceSettings.get('mapZoom'),
+          },
         },
         MessagePriority.VERY_HIGH,
       )
       .catch(console.error)
-
-    this.mapProvider.update(locationState.latitude, locationState.longitude)
   }
 
   private async sendMapTile(tile: Tile) {

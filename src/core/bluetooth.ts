@@ -265,6 +265,10 @@ export class Bluetooth extends BluetoothEventEmitter {
     }
   }
 
+  getSendingMessageQueueLength() {
+    return this.messagesQueue.length
+  }
+
   //TODO: handle errors, optimize loading services and characteristics
   async sendMessage(message: Message, priority = MessagePriority.NORMAL) {
     if (!this.connectedDevice) {
