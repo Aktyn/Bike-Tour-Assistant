@@ -102,6 +102,21 @@ int safeCreateDirectory(const char *path) {
   return 0;
 }
 
+void safeDeleteFile(const char *path) {
+  if (access(path, F_OK) == 0) {
+    DEBUG("Deleting file: %s\n", path);
+
+    std::string rm_command = "rm " + std::string(path);
+    char *rm_output = executeCommand(rm_command.c_str());
+    if (rm_output == nullptr) {
+      printf("Error deleting file: %s\n", path);
+    } else {
+      free(rm_output);
+      DEBUG("File deleted: %s\n", path);
+    }
+  }
+}
+
 void createOrReplaceFileFromBinaryData(const std::string &filePath, const uint8_t *data, uint32_t size) {
   std::ofstream file(filePath, std::ios::out | std::ios::binary);
   if (!file) {

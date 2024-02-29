@@ -38,6 +38,7 @@ struct Icons {
   std::vector<uint8_t> slopeUphillImageData;
   std::vector<uint8_t> slopeDownhillImageData;
   std::pair<uint16_t, uint16_t> slopeIconSize;
+  std::vector<std::vector<uint8_t>> digits40x80ImageData;
 };
 
 double calculateSlope(const std::vector<Location> &locationHistory);

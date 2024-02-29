@@ -75,7 +75,6 @@ int le_callback(int clientnode, int operation, int cticn, void (*onMessage)(unsi
     // Data (index 6) is notify capable
     // so if the client has enabled notifications for this characteristic
     // the following write will send the data as a notification to the client
-    //TODO: uncomment and test
     //buf[0] = 0x67;
     //write_ctic(localnode(), 4, buf, 0);
   } else if (operation == LE_KEYPRESS) {

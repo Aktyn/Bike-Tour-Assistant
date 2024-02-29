@@ -84,7 +84,8 @@ Tile *Tile::loadFromCache(uint32_t x, uint32_t y, uint8_t z) {
   auto tileResolution = loadPngFile(imageData, tilePath.c_str(), LCT_RGB);
   if (tileResolution.first == 0 || tileResolution.second == 0 || imageData.empty()) {
     std::cerr << "Error loading tile from cache: " << tilePath << std::endl;
-    //TODO: remove file if it exists (sometimes there are corrupted files in the cache directory)
+    // Remove file if it exists as it was probably corrupted when fetching via bluetooth
+    safeDeleteFile(tilePath.c_str());
     return nullptr;
   }
 

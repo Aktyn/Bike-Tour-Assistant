@@ -32,6 +32,15 @@ Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false),
       this->icons.slopeDownhillImageData,
       "../assets/slope_downhill.png", LCT_RGBA
   );
+
+  for (uint8_t i = 0; i < 10; i++) {
+    this->icons.digits40x80ImageData.emplace_back();
+    auto digitFilePath = "../assets/digits_40x80/" + std::to_string(i) + ".png";
+    loadPngFile(
+        this->icons.digits40x80ImageData[i],
+        digitFilePath.c_str(), LCT_GREY_ALPHA
+    );
+  }
 }
 
 Core::~Core() {

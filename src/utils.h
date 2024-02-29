@@ -14,6 +14,8 @@ std::string pwd();
 
 int safeCreateDirectory(const char *path);
 
+void safeDeleteFile(const char *path);
+
 void createOrReplaceFileFromBinaryData(const std::string& filePath, const uint8_t* data, uint32_t size);
 
 uint16_t rgbToRgb666(uint8_t red, uint8_t green, uint8_t blue);

@@ -205,14 +205,47 @@ void renderer::renderMap(
   free(buffer);
 }
 
-void renderer::drawSpeed(double speed) {
-  std::string speedText = std::to_string((uint16_t) std::round(speed));
+void renderer::drawSpeed(double speed, const Icons &icons) {
+  ASSERT(icons.digits40x80ImageData.size() == 10, "Invalid digits count");
+  const auto roundedSpeed = uint16_t(std::round(speed));
+  const uint8_t speedDigits = roundedSpeed >= 10 ? 2 : 1;
+  const uint16_t imageWidth = TOP_PANEL_HEIGHT;
+  const uint16_t imageHeight = TOP_PANEL_HEIGHT;
+  const uint16_t digitWidth = 40;
+  const uint16_t digitHeight = 80;
+  const uint16_t channelCount = 2;
 
-  //TODO: draw digits from bitmap files (cache loaded buffers)
-  drawTextLine(speedText.c_str(),
-               TOP_PANEL_HEIGHT, (LCD_2IN4_HEIGHT - MAP_HEIGHT) / 2 - Font50.Height / 2,
-               LCD_2IN4_WIDTH - TOP_PANEL_HEIGHT * 2,
-               WHITE, backgroundColor, &Font50, ALIGN_CENTER);
+  uint16_t *imageBuffer = allocateImageBuffer(imageWidth, imageHeight);
+  if (imageBuffer == nullptr) {
+    return;
+  }
+  Paint_NewImage(imageBuffer, imageWidth, imageHeight, 0, WHITE, 24);
+  Paint_Clear(backgroundColor);
+
+  for (uint8_t digitIndex = 0; digitIndex < speedDigits; digitIndex++) {
+    uint8_t digit = (digitIndex == 0 ? roundedSpeed / 10 : roundedSpeed) % 10;
+    auto imageData = icons.digits40x80ImageData[digit];
+
+    for (uint16_t y = 0; y < digitHeight; y++) {
+      for (uint16_t x = 0; x < digitWidth; x++) {
+        uint16_t relativeX = speedDigits > 1 ? digitIndex * digitWidth + x : (imageWidth - digitWidth) / 2 + x;
+        uint16_t index = (imageHeight - 1 - y) * imageWidth + (imageWidth - 1 - relativeX);
+
+        uint16_t pixelIndex = (y * digitWidth + x) * channelCount;
+        auto alphaFactor = double(imageData[pixelIndex + 1]) / 255.0;
+        imageBuffer[index] = convertRgbColor(
+            RGB(
+                uint8_t(mix(BACKGROUND_RED, imageData[pixelIndex], alphaFactor)),
+                uint8_t(mix(BACKGROUND_GREEN, imageData[pixelIndex], alphaFactor)),
+                uint8_t(mix(BACKGROUND_BLUE, imageData[pixelIndex], alphaFactor))
+            )
+        );
+      }
+    }
+  }
+
+  drawImageBuffer(imageBuffer, (LCD_2IN4_WIDTH - imageWidth) / 2, 0, imageWidth, imageHeight);
+  free(imageBuffer);
 }
 
 void renderer::drawBattery(uint8_t percentage, bool isOverheated) {
@@ -261,7 +294,6 @@ void renderer::drawBattery(uint8_t percentage, bool isOverheated) {
 
   drawImageBuffer(imageBuffer, 0, 0, imageWidth, imageHeight);
   free(imageBuffer);
-  imageBuffer = nullptr;
 }
 
 void renderer::drawDirectionArrow(double heading, const Icons &icons) {
@@ -347,11 +379,11 @@ void renderer::drawSlope(double slope, const Icons &icons) {
   }
 
   std::string slopeText = std::to_string((uint16_t) round(radiansToDegrees(slope))) + "deg";
-  auto aligned_x = MAX(0, int16_t(imageWidth) -icons.slopeIconSize.first - int16_t(Font16.Width) * slopeText.length());
+  auto aligned_x = MAX(0,
+                       int16_t(imageWidth) -icons.slopeIconSize.first - int16_t(Font16.Width) * slopeText.length());
   Paint_DrawString_EN(uint16_t(aligned_x), (imageHeight - Font16.Height) / 2, slopeText.c_str(), &Font16,
                       backgroundColor, textColor);
 
   drawImageBuffer(imageBuffer, LCD_2IN4_WIDTH - imageWidth, TOP_PANEL_HEIGHT / 2, imageWidth, imageHeight);
   free(imageBuffer);
-  imageBuffer = nullptr;
 }

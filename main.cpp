@@ -43,7 +43,7 @@ void *displayThread(void *args) {
 
       if (CORE.needSpeedRedraw) {
         CORE.needSpeedRedraw = false;
-        renderer::drawSpeed(CORE.location.speed);
+        renderer::drawSpeed(CORE.location.speed, CORE.getIcons());
       }
 
       if (CORE.needDirectionRedraw) {

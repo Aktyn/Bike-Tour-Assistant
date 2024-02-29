@@ -19,7 +19,7 @@ namespace renderer {
       uint8_t mapZoom
   );
 
-  void drawSpeed(double speed);
+  void drawSpeed(double speed, const Icons &icons);
 
   void drawBattery(uint8_t percentage, bool isOverheated);
 
