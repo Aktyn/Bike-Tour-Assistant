@@ -59,7 +59,7 @@ add_executable(BikeTourAssistant ${C_SOURCES} ${CXX_SOURCES})
 target_include_directories(BikeTourAssistant PUBLIC ${C_INCLUDE_DIRECTORIES})
 
 target_compile_definitions(BikeTourAssistant PUBLIC USE_DEV_LIB)
-target_compile_definitions(BikeTourAssistant PUBLIC USE_DEBUG)
+target_compile_definitions(BikeTourAssistant PUBLIC USE_DEBUG) # Remove for production compilation
 
 target_link_libraries(BikeTourAssistant bluetooth)
 target_link_libraries(BikeTourAssistant lgpio)

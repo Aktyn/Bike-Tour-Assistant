@@ -6,7 +6,10 @@ std::pair<uint16_t, uint16_t> parsePngData(std::vector<uint8_t> &outData, uint8_
   unsigned width, height;
   outData.clear();
   unsigned error = lodepng::decode(outData, width, height, pngData, pngDataLength, LCT_RGB);
-  if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+  if (error) {
+    std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+    return std::make_pair(0, 0);
+  }
 
   return std::make_pair(width, height);
 }
@@ -16,7 +19,10 @@ loadPngFile(std::vector<uint8_t> &outData, const char *filename, LodePNGColorTyp
   unsigned width, height;
   outData.clear();
   unsigned error = lodepng::decode(outData, width, height, filename, colortype);
-  if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+  if (error) {
+    std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+    return std::make_pair(0, 0);
+  }
 
   return std::make_pair(width, height);
 }

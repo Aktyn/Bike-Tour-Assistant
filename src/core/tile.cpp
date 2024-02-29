@@ -1,12 +1,15 @@
 #include "tile.h"
 #include "pngUtils.h"
 #include "utils.h"
+#include "Debug.h"
 
 #include <cstring>
 #include <cmath>
 #include <tuple>
 
-Tile::Tile(uint32_t x, uint32_t y, uint32_t z,
+static std::string tilesCacheDirectory = pwd() + "/tiles_cache";
+
+Tile::Tile(uint32_t x, uint32_t y, uint8_t z,
            uint32_t dataByteLength)
     : x(x), y(y), z(z),
       dataByteLength(dataByteLength), key(Tile::getTileKey(x, y, z)) {
@@ -15,8 +18,16 @@ Tile::Tile(uint32_t x, uint32_t y, uint32_t z,
   this->tileWidth = 0;
   this->tileHeight = 0;
 
-  this->pngData = new uint8_t[dataByteLength];
-  memset(this->pngData, 0, dataByteLength * sizeof(uint8_t));
+  if (dataByteLength > 0) {
+    this->pngData = new uint8_t[dataByteLength];
+    memset(this->pngData, 0, dataByteLength * sizeof(uint8_t));
+  } else {
+    this->pngData = nullptr;
+  }
+}
+
+Tile::Tile(uint32_t x, uint32_t y, uint8_t z, std::vector<uint8_t> &imageData) : Tile(x, y, z, 0) {
+  this->imageData = imageData;
 }
 
 Tile::~Tile() {
@@ -37,19 +48,51 @@ void Tile::appendPngData(uint16_t chunkIndex, uint8_t *data) {
   this->loadedByteLength += chunkSize;
 
   if (this->isFullyLoaded() && this->imageData.empty()) {
-    auto tileResolution = parsePngData(this->imageData, this->pngData, this->dataByteLength);
-    this->tileWidth = std::get<0>(tileResolution);
-    this->tileHeight = std::get<1>(tileResolution);
+    this->finalize();
   }
+}
+
+void Tile::finalize() {
+  auto tileResolution = parsePngData(this->imageData, this->pngData, this->dataByteLength);
+  this->tileWidth = std::get<0>(tileResolution);
+  this->tileHeight = std::get<1>(tileResolution);
+
+
+  if (safeCreateDirectory(tilesCacheDirectory.c_str()) != 0) {
+    std::cerr << "Error creating directory for tiles cache" << std::endl;
+    return;
+  }
+
+  std::string tilePath = tilesCacheDirectory + "/" + this->key + ".png";
+  createOrReplaceFileFromBinaryData(tilePath, this->pngData, this->dataByteLength);
+  DEBUG("Tile %s saved to %s\n", this->key.c_str(), tilePath.c_str());
 }
 
 bool Tile::isFullyLoaded() const {
   return this->loadedByteLength >= this->dataByteLength;
 }
 
-
-std::string Tile::getTileKey(uint32_t x, uint32_t y, uint32_t z) {
+std::string Tile::getTileKey(uint32_t x, uint32_t y, uint8_t z) {
   return std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
+}
+
+Tile *Tile::loadFromCache(uint32_t x, uint32_t y, uint8_t z) {
+  auto tileKey = Tile::getTileKey(x, y, z);
+  std::string tilePath = tilesCacheDirectory + "/" + tileKey + ".png";
+
+  std::vector<uint8_t> imageData;
+  auto tileResolution = loadPngFile(imageData, tilePath.c_str(), LCT_RGB);
+  if (tileResolution.first == 0 || tileResolution.second == 0 || imageData.empty()) {
+    std::cerr << "Error loading tile from cache: " << tilePath << std::endl;
+    //TODO: remove file if it exists (sometimes there are corrupted files in the cache directory)
+    return nullptr;
+  }
+
+  Tile *tile = new Tile(x, y, z, imageData);
+  tile->tileWidth = tileResolution.first;
+  tile->tileHeight = tileResolution.second;
+
+  return tile;
 }
 
 std::pair<double, double> Tile::convertLatLongToTileXY(double latitude, double longitude, uint8_t zoom) {
@@ -61,3 +104,7 @@ std::pair<double, double> Tile::convertLatLongToTileXY(double latitude, double l
 
   return std::make_pair(std::fmod(x, n), std::fmod(y, n));
 }
+
+
+
+

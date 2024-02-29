@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <iostream>
 #include <map>
+#include <set>
 #include <chrono>
 
 #define LOCATION_HISTORY_SIZE 8
@@ -27,8 +28,6 @@ public:
     static Core instance;
     return instance;
   }
-
-  unsigned char messageOutBuffer[64];
 
   Tour tour;
   Location location;
@@ -52,13 +51,13 @@ public:
 
   void setBacklight(uint8_t lightness);
 
-  void registerTile(uint32_t x, uint32_t y, uint32_t z, uint32_t dataByteLength);
+  void registerTile(uint32_t x, uint32_t y, uint8_t z, uint32_t dataByteLength);
 
   void appendTileImageData(uint16_t chunkIndex, uint8_t *data);
 
   void updateLocation(double latitude, double longitude,
                       double speed, double heading,
-                      double altitude, double altitudeAccuracy, double accuracy, uint64_t timestamp);
+                      double altitude, double altitudeAccuracy, double accuracy, uint64_t timestamp, uint8_t mapZoom);
 
   void drawMap();
 
@@ -73,12 +72,14 @@ private:
   ~Core();
 
   void clearTiles();
+  void requestTileData(uint32_t x, uint32_t y, uint8_t z);
 
   timestamp lastActivityTime;
   bool isInactive;
   uint8_t backlightLightness; // 0-100
 
   std::map<std::string, Tile *> tiles;
+  std::set<std::string> requestedTiles;
   Tile *fetchingTile;
   uint8_t mapZoom;
 

@@ -123,8 +123,8 @@ void renderer::renderMap(
 
         ASSERT(relativeTileX >= 0 && relativeTileX <= 1, "Relative tile X out of bounds");
         ASSERT(relativeTileY >= 0 && relativeTileY <= 1, "Relative tile Y out of bounds");
-        uint16_t tileImageX = uint16_t(relativeTileY * double(tile->tileWidth));
-        uint16_t tileImageY = uint16_t(relativeTileX * double(tile->tileHeight));
+        auto tileImageX = uint16_t(relativeTileY * double(tile->tileWidth));
+        auto tileImageY = uint16_t(relativeTileX * double(tile->tileHeight));
 
 #if USE_DEBUG
         if (tileImageX == 0 || tileImageY == 0 ||

@@ -1,14 +1,17 @@
 #include "utils.h"
 #include "Debug.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
-#include <stdint.h>
-#include <limits.h>
+#include <cstdint>
+#include <climits>
 #include <sys/stat.h> // Include this header for R_OK
 #include <cmath>
+#include <libgen.h>
+#include <fstream>
+#include <iostream>
 
 #define MKDIR_COMMAND_MAX (PATH_MAX + 6)
 
@@ -63,6 +66,22 @@ char *executeCommand(const char *command) {
   return cmd_output;
 }
 
+std::string pwd() {
+  char *pwd_output = executeCommand("pwd");
+  if (pwd_output == nullptr) {
+    printf("Error executing `pwd` command\n");
+    return "";
+  }
+
+  char directory[PATH_MAX];
+  strncpy(directory, dirname(pwd_output), PATH_MAX);
+  directory[PATH_MAX - 1] = '\0'; // Ensure null termination
+
+  free(pwd_output);
+
+  return {directory};
+}
+
 int safeCreateDirectory(const char *path) {
   if (access(path, R_OK) != 0) {
     DEBUG("Creating directory: %s\n", path);
@@ -81,6 +100,22 @@ int safeCreateDirectory(const char *path) {
   }
 
   return 0;
+}
+
+void createOrReplaceFileFromBinaryData(const std::string &filePath, const uint8_t *data, uint32_t size) {
+  std::ofstream file(filePath, std::ios::out | std::ios::binary);
+  if (!file) {
+    std::cerr << "Cannot open file: " << filePath << std::endl;
+    return;
+  }
+
+  file.write(reinterpret_cast<const char *>(data), std::streamsize(size));
+
+  if (!file) {
+    std::cerr << "Write to file failed: " << filePath << std::endl;
+  }
+
+  file.close();
 }
 
 uint16_t rgbToRgb666(uint8_t red, uint8_t green, uint8_t blue) {
@@ -220,6 +255,21 @@ uint64_t bytesToUint64(const uint8_t *bytes, bool big_endian) {
     i_ptr[0] = bytes[0];
   }
   return i;
+}
+
+void uint32ToBytes(uint32_t value, uint8_t *bytes, bool big_endian) {
+  auto *value_ptr = (uint8_t *) &value;
+  if (big_endian) {
+    bytes[0] = value_ptr[3];
+    bytes[1] = value_ptr[2];
+    bytes[2] = value_ptr[1];
+    bytes[3] = value_ptr[0];
+  } else {
+    bytes[0] = value_ptr[0];
+    bytes[1] = value_ptr[1];
+    bytes[2] = value_ptr[2];
+    bytes[3] = value_ptr[3];
+  }
 }
 
 double metersPerSecondToKmPerHour(double metersPerSecond) {

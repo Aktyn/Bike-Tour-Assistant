@@ -22,6 +22,7 @@ void *displayThread(void *args) {
       showIntroView(); // This function includes while loop breaking on bluetooth connection
     }
 
+    resetOutMessagesQueue();
     renderer::prepareMainView();
     CORE.reset();
 

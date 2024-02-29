@@ -2,16 +2,18 @@
 #include "utils.h"
 #include "renderer.h"
 #include "pngUtils.h"
+#include "bluetooth/messageHandler.h"
 
 #include <cmath>
 
 #define INACTIVITY_TIMEOUT 120000 // 2 minutes in milliseconds
+#define TILES_RADIUS 1
 
 Core &CORE = Core::getInstance();
 
 Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false), backlightLightness(100),
                needMapRedraw(false), needSpeedRedraw(false), needDirectionRedraw(false), needSlopeRedraw(false),
-               fetchingTile(nullptr), messageOutBuffer{0},
+               fetchingTile(nullptr),
                location({
                             0.0, 0.0, 0.0, 0.0,
                             0.0, 0.0, 0.0,
@@ -30,8 +32,6 @@ Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false),
       this->icons.slopeDownhillImageData,
       "../assets/slope_downhill.png", LCT_RGBA
   );
-
-  memset(this->messageOutBuffer, 0, sizeof(this->messageOutBuffer));
 }
 
 Core::~Core() {
@@ -52,6 +52,8 @@ void Core::reset() {
   this->needMapRedraw = true;
   this->needSpeedRedraw = true;
   this->needDirectionRedraw = true;
+  this->needSlopeRedraw = true;
+  this->battery.needRedraw = true;
   this->registerActivity();
 }
 
@@ -92,11 +94,12 @@ void Core::clearTiles() {
     delete tile.second;
   }
   this->tiles.clear();
+  this->requestedTiles.clear();
   this->fetchingTile = nullptr;
 }
 
 void
-Core::registerTile(uint32_t x, uint32_t y, uint32_t z, uint32_t dataByteLength) {
+Core::registerTile(uint32_t x, uint32_t y, uint8_t z, uint32_t dataByteLength) {
   if (z != this->mapZoom) {
     // Discard loaded tiles if zoom level has changed
     this->clearTiles();
@@ -127,8 +130,15 @@ void Core::appendTileImageData(uint16_t chunkIndex, uint8_t *data) {
 
 void Core::updateLocation(
     double latitude, double longitude, double speed, double heading,
-    double altitude, double altitudeAccuracy, double accuracy, uint64_t timestamp
+    double altitude, double altitudeAccuracy, double accuracy, uint64_t timestamp, uint8_t locationMapZoom
 ) {
+  if (locationMapZoom != this->mapZoom) {
+    // Discard loaded tiles if zoom level has changed
+    this->clearTiles();
+    this->mapZoom = locationMapZoom;
+    this->tour.setZoom(locationMapZoom);
+  }
+
   auto previousUpdateTimestamp = this->location.timestamp;
 
   if (std::round(this->location.speed) != std::round(metersPerSecondToKmPerHour(speed))) {
@@ -170,6 +180,49 @@ void Core::updateLocation(
   while (this->locationHistory.size() > LOCATION_HISTORY_SIZE) {
     this->locationHistory.erase(this->locationHistory.begin());
   }
+
+
+  auto tileXY = Tile::convertLatLongToTileXY(
+      latitude, longitude, locationMapZoom
+  );
+  auto tileX = uint32_t(tileXY.first);
+  auto tileY = uint32_t(tileXY.second);
+
+  this->requestTileData(tileX, tileY, locationMapZoom);
+  for (int8_t i = -TILES_RADIUS; i <= TILES_RADIUS; i++) {
+    for (int8_t j = -TILES_RADIUS; j <= TILES_RADIUS; j++) {
+      if (i == 0 && j == 0) {
+        continue;
+      }
+      this->requestTileData(tileX + i, tileY + j, locationMapZoom);
+    }
+  }
+}
+
+void Core::requestTileData(uint32_t x, uint32_t y, uint8_t z) {
+  auto tileKey = Tile::getTileKey(x, y, z);
+  if (this->tiles.find(tileKey) != this->tiles.end()) {
+    return;
+  }
+  if (this->requestedTiles.find(tileKey) != this->requestedTiles.end()) {
+    return;
+  }
+  this->requestedTiles.insert(tileKey);
+
+  Tile *cachedTile = Tile::loadFromCache(x, y, z);
+  if (cachedTile != nullptr) {
+    DEBUG("Tile %s loaded from cache\n", cachedTile->key.c_str());
+    this->tiles[tileKey] = cachedTile;
+    this->needMapRedraw = true;
+    this->registerActivity();
+    return;
+  }
+
+  std::vector<uint8_t> tileData(MESSAGE_OUT_SIZE);
+  uint32ToBytes(x, &tileData[0] + 7, false);
+  uint32ToBytes(y, &tileData[0] + 11, false);
+  uint32ToBytes(z, &tileData[0] + 15, false);
+  sendMessage(MESSAGE_OUT_REQUEST_TILE, tileData);
 }
 
 void Core::drawMap() {
