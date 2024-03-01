@@ -174,6 +174,7 @@ void Core::updateLocation(
     this->location.longitude = longitude;
     this->needMapRedraw = true;
     this->registerActivity();
+    this->camera.updateLocation(latitude, longitude);
   }
 
   this->location.altitude = altitude;
@@ -231,7 +232,7 @@ void Core::requestTileData(uint32_t x, uint32_t y, uint8_t z) {
   uint32ToBytes(x, &tileData[0] + 7, false);
   uint32ToBytes(y, &tileData[0] + 11, false);
   uint32ToBytes(z, &tileData[0] + 15, false);
-  sendMessage(MESSAGE_OUT_REQUEST_TILE, tileData);
+  sendMessage(MESSAGE_OUT_REQUEST_TILE, tileData, PRIORITY_NORMAL);
 }
 
 void Core::drawMap() {
@@ -246,14 +247,9 @@ double Core::getSlope() const {
   return calculateSlope(this->locationHistory);
 }
 
-uint8_t Core::getMapZoom() const {
-  return this->mapZoom;
-}
-
 const Icons &Core::getIcons() const {
   return this->icons;
 }
-
 
 bool isBluetoothDisconnected() {
   return !CORE.isBluetoothConnected;

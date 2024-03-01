@@ -1,7 +1,7 @@
 # Bike-Tour-Assistant
 The next iteration of my previous project: Cyclocomputer.
 
-It now uses Raspberry Pi Zero 2 W with LCD display and camera for hardware.
+It now uses Raspberry Pi Zero 2 W with LCD Module and camera for hardware.
 
 The codebase of the Raspberry Pi project is written in C++.
 
@@ -22,6 +22,7 @@ sudo apt install build-essential
 sudo apt install cmake
 sudo apt install libbluetooth-dev
 sudo apt install libjpeg-dev
+sudo apt install exiftool
 ```
 - ##### LCD Display
 ```

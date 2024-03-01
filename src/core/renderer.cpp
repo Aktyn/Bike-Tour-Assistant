@@ -378,7 +378,7 @@ void renderer::drawSlope(double slope, const Icons &icons) {
     }
   }
 
-  std::string slopeText = std::to_string((uint16_t) round(radiansToDegrees(slope))) + "deg";
+  std::string slopeText = std::to_string((uint16_t) round(radiansToDegrees(slope))) + "d";
   auto aligned_x = MAX(0,
                        int16_t(imageWidth) -icons.slopeIconSize.first - int16_t(Font16.Width) * slopeText.length());
   Paint_DrawString_EN(uint16_t(aligned_x), (imageHeight - Font16.Height) / 2, slopeText.c_str(), &Font16,

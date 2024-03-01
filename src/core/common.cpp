@@ -15,7 +15,7 @@ double calculateSlope(const std::vector<Location> &locationHistory) {
     double distance = distanceBetweenCoordinates(locationHistory[i].latitude, locationHistory[i].longitude,
                                         locationHistory[i - 1].latitude, locationHistory[i - 1].longitude);
     double slope = atan(altitudeDifference / distance);
-    measurements.push_back(slope == slope ? slope : 0.0);
+    measurements.push_back(slope == slope ? radiansToDegrees(slope) : 0.0);
   }
 
   return calculateLinearlyWeightedAverage(measurements);

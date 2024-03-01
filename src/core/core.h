@@ -4,6 +4,7 @@
 #include "tile.h"
 #include "tour.h"
 #include "battery.h"
+#include "camera.h"
 #include "common.h"
 
 #include <cstdint>
@@ -32,6 +33,7 @@ public:
   Tour tour;
   Location location;
   Battery battery;
+  Camera camera;
 
   bool isBluetoothConnected;
   bool isRunning;
@@ -62,8 +64,6 @@ public:
   void drawMap();
 
   double getSlope() const;
-
-  uint8_t getMapZoom() const;
 
   const Icons &getIcons() const;
 private:

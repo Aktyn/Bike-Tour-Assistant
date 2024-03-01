@@ -1,22 +1,27 @@
 #include "messageHandler.h"
 #include "bluetoothServer.h"
 #include "core/core.h"
-#include "camera/camera.h"
 #include "utils.h"
 
-#include <pthread.h>
 #include <iostream>
-#include <queue>
+#include <algorithm>
 
 #define MESSAGE_OUT_SIGNATURE_BYTE_0 0x0D
 #define MESSAGE_OUT_SIGNATURE_BYTE_1 0x25
 
-static std::vector<unsigned char> messageOutBuffer(MESSAGE_OUT_SIZE, 0);
-std::queue<std::vector<unsigned char>> messagesQueue;
+
+
+struct AwaitingMessage {
+  std::vector<uint8_t> data;
+  MessagePriority priority;
+};
+
+std::vector<AwaitingMessage> messagesQueue;
+static std::vector<uint8_t> messageOutBuffer(MESSAGE_OUT_SIZE, 0);
 static uint32_t messageOutIndex = 0;
 static bool waitingForOutMessageConfirmation = false;
 
-void handleMessage(unsigned char *data) {
+void handleMessage(uint8_t *data) {
   if (!CORE.isBluetoothConnected) {
     return;
   }
@@ -36,8 +41,7 @@ void handleMessage(unsigned char *data) {
       break;
     case 3: //TAKE_PHOTO
     {
-      pthread_t photo_thread_id;
-      pthread_create(&photo_thread_id, nullptr, takePhotoAsync, nullptr);
+      CORE.camera.takePhoto();
     }
       break;
     case 4: // LOCATION_UPDATE
@@ -106,13 +110,19 @@ void handleMessage(unsigned char *data) {
       onOutMessageConfirmation();
     }
       break;
+    case 11: // SET_DISTANCE_PER_PHOTO
+    {
+      uint16_t distance = bytesToUint16(data + 1, false);
+      std::cout << "Setting distance per photo: " << std::to_string(distance) << " meters" << std::endl;
+      CORE.camera.setDistancePerPhoto(distance);
+    } break;
     default:
       std::cerr << "Unknown message: " << (uint8_t) data[0] << std::endl;
       break;
   }
 }
 
-void sendMessage(MessageOutType type, std::vector<unsigned char> data) {
+void sendMessage(MessageOutType type, std::vector<uint8_t> data, MessagePriority priority = PRIORITY_NORMAL) {
   if (!CORE.isBluetoothConnected) {
     return;
   }
@@ -126,11 +136,11 @@ void sendMessage(MessageOutType type, std::vector<unsigned char> data) {
   data[3] = indexBytes[1];
   data[4] = indexBytes[2];
   data[5] = indexBytes[3];
-  data[6] = (unsigned char) type;
+  data[6] = (uint8_t) type;
 
 
   if (waitingForOutMessageConfirmation) {
-    messagesQueue.push(data);
+    messagesQueue.push_back({data, priority});
     return;
   }
 
@@ -148,14 +158,22 @@ void sendMessage(MessageOutType type, std::vector<unsigned char> data) {
 }
 
 void sendMessage(MessageOutType type) {
-  sendMessage(type, messageOutBuffer);
+  sendMessage(type, messageOutBuffer, PRIORITY_NORMAL);
 }
 
 void onOutMessageConfirmation() {
   if (!messagesQueue.empty()) {
+    std::sort(
+        messagesQueue.begin(),
+        messagesQueue.end(),
+        [](const AwaitingMessage &a, const AwaitingMessage &b) {
+          return a.priority < b.priority;
+        }
+    );
+
     auto message = messagesQueue.front();
-    messagesQueue.pop();
-    sendBluetoothMessage(&message[0]);
+    sendBluetoothMessage(&message.data[0]);
+    messagesQueue.erase(messagesQueue.begin());
     waitingForOutMessageConfirmation = true;
   } else {
     waitingForOutMessageConfirmation = false;
@@ -163,6 +181,9 @@ void onOutMessageConfirmation() {
 }
 
 void resetOutMessagesQueue() {
-  messagesQueue = std::queue<std::vector<unsigned char>>();
+  for (auto &message: messagesQueue) {
+    message.data.clear();
+  }
+  messagesQueue.clear();
   waitingForOutMessageConfirmation = false;
 }
