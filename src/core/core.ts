@@ -51,6 +51,17 @@ export class Core {
         )
         .catch(console.error)
     }, 200)
+    const [broadcastDistancePerPhotoUpdate] = debounce((value: number) => {
+      this.bluetooth
+        .sendMessage(
+          {
+            type: MessageType.SET_DISTANCE_PER_PHOTO,
+            data: { distance: value },
+          },
+          MessagePriority.HIGH,
+        )
+        .catch(console.error)
+    }, 200)
 
     this.bluetooth.on('deviceConnected', () => {
       try {
@@ -72,6 +83,9 @@ export class Core {
       }
 
       broadcastLightnessUpdate(this.deviceSettings.get('lightness'))
+      broadcastDistancePerPhotoUpdate(
+        this.deviceSettings.get('distancePerPhoto'),
+      )
 
       this.gps
         .startObservingLocation(this.deviceSettings.getSettings())
@@ -130,6 +144,9 @@ export class Core {
 
       if (!key || key === 'lightness') {
         broadcastLightnessUpdate(settings.lightness)
+      }
+      if (!key || key === 'distancePerPhoto') {
+        broadcastDistancePerPhotoUpdate(settings.distancePerPhoto)
       }
       if (!key || key === 'gpxFile') {
         void this.synchronizeTour(settings.gpxFile)

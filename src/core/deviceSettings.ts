@@ -6,6 +6,8 @@ import { tryParseJSON } from '../utils'
 
 const defaultSettings = {
   lightness: 100,
+  /** Causes a photo to be taken every N meters */
+  distancePerPhoto: 500,
   gpxFile: null as null | DocumentPickerSuccessResult,
   mapZoom: 16,
   gpsAccuracy: LocationAccuracy.BestForNavigation,

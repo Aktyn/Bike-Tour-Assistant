@@ -15,6 +15,7 @@ export enum MessageType {
   SEND_TOUR_START,
   SEND_TOUR_DATA_CHUNK,
   CONFIRM_RECEIVED_MESSAGE,
+  SET_DISTANCE_PER_PHOTO,
 }
 
 export enum IncommingMessageType {
@@ -50,6 +51,7 @@ export type Message =
   | MessageBase<MessageType.SEND_TOUR_START, { pointsCount: number }>
   | MessageBase<MessageType.SEND_TOUR_DATA_CHUNK, TourPoint[]>
   | MessageBase<MessageType.CONFIRM_RECEIVED_MESSAGE, null>
+  | MessageBase<MessageType.SET_DISTANCE_PER_PHOTO, { distance: number }>
 
 /** Returns base64 representation of buffer (224 bytes limit) */
 export function parseMessageData(message: Message) {
@@ -126,6 +128,10 @@ export function parseMessageData(message: Message) {
           buffer.writeFloatLE(point.longitude, 9 + i * 10)
         }
       }
+      break
+    case MessageType.SET_DISTANCE_PER_PHOTO:
+      buffer = Buffer.alloc(3)
+      buffer.writeUInt16LE(Math.floor(message.data.distance), 1)
       break
   }
 

@@ -24,6 +24,9 @@ export const Main = () => {
   const { deviceSettings, bluetooth, gps } = useCore()
 
   const [lightness, setLightness] = useState(deviceSettings.get('lightness'))
+  const [distancePerPhoto, setDistancePerPhoto] = useState(
+    deviceSettings.get('distancePerPhoto'),
+  )
   const [gpxFile, setGpxFile] = useState(deviceSettings.get('gpxFile'))
   const [mapZoom, setMapZoom] = useState(deviceSettings.get('mapZoom'))
   const [gpsAccuracy, setGpsAccuracy] = useState(
@@ -42,6 +45,9 @@ export const Main = () => {
     switch (key) {
       case 'lightness':
         setLightness(settings.lightness)
+        break
+      case 'distancePerPhoto':
+        setDistancePerPhoto(settings.distancePerPhoto)
         break
       case 'mapZoom':
         setMapZoom(settings.mapZoom)
@@ -104,6 +110,22 @@ export const Main = () => {
           onValueChange={(value) => deviceSettings.set('lightness', value)}
         />
         {/* TODO: switch to enable auto lightness (based on sunrise/sundawn time in current location) */}
+
+        <Divider />
+        <TextInput
+          mode="outlined"
+          label="Distance per photo (meters)"
+          value={distancePerPhoto.toString()}
+          right={<TextInput.Affix text="meters" />}
+          left={<TextInput.Icon icon="map-marker-distance" />}
+          maxLength={4}
+          keyboardType="numeric"
+          onChangeText={(value) => {
+            const parsedValue = parseInt(removeNonNumericCharacters(value), 10)
+            if (isNaN(parsedValue) || parsedValue < 1) return
+            deviceSettings.set('distancePerPhoto', parsedValue)
+          }}
+        />
 
         <Divider />
         {gpxFile ? (
@@ -282,6 +304,7 @@ const styles = StyleSheet.create({
     rowGap: 16,
   },
   horizontalView: {
+    maxWidth: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

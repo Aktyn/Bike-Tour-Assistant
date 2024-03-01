@@ -20,11 +20,9 @@ declare interface MapProviderEventEmitter {
 class MapProviderEventEmitter extends EventEmitter {}
 
 export class MapProvider extends MapProviderEventEmitter {
-  //TODO: option for selecting tiles provider
+  // https://wiki.openstreetmap.org/wiki/Raster_tile_providers
   private readonly tilesProvider =
     'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
-  // 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-  // https://wiki.openstreetmap.org/wiki/Raster_tile_providers
 
   private readonly serverLetter = getRandomServerLetter()
 
