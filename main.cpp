@@ -3,6 +3,7 @@
 #include "core/core.h"
 #include "core/renderer.h"
 #include "bluetooth/messageHandler.h"
+#include "utils.h"
 
 #include <cstdlib>
 #include <csignal> //signal()
@@ -72,7 +73,9 @@ void terminate(int signo) {
   Handler_2IN4_LCD(signo);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  registerExecutablePath(argv[0]);
+
 #if USE_DEV_LIB
   std::cout << "Using dev lib" << std::endl;
 #endif

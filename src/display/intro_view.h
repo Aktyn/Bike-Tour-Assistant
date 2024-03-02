@@ -1,6 +1,6 @@
-#ifndef __DISPLAY_INTRO_VIEW_H
-#define __DISPLAY_INTRO_VIEW_H
+#ifndef DISPLAY_INTRO_VIEW_H
+#define DISPLAY_INTRO_VIEW_H
 
 void showIntroView(void);
 
-#endif // __DISPLAY_INTRO_VIEW_H
+#endif // DISPLAY_INTRO_VIEW_H

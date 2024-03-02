@@ -3,14 +3,12 @@
 #include "loader.h"
 #include "draw.h"
 #include "core/core.h"
+#include "utils.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 
 extern "C"
 {
-#include "DEV_Config.h"
-#include "LCD_2inch4.h"
 #include "GUI_Paint.h"
 }
 
@@ -20,15 +18,16 @@ extern "C"
 #define BLUETOOTH_ICON_WIDTH 64
 #define BLUETOOTH_ICON_HEIGHT 64
 
-void showIntroView(void)
-{
+void showIntroView() {
   printf("Showing intro view...\n");
 
   LCD_2IN4_Init();
   LCD_2IN4_Clear(BLACK);
   LCD_SetBacklight(1000);
 
-  drawImageFromBitmapFile("../assets/logo128x128.bmp",
+  auto logoImagePath = pwd() + "/../assets/logo128x128.bmp";
+  DEBUG("Loading logo image from: %s\n", logoImagePath.c_str());
+  drawImageFromBitmapFile(logoImagePath.c_str(),
                           (LCD_2IN4_WIDTH - LOGO_WIDTH) / 2, (LCD_2IN4_HEIGHT / 2 - LOGO_HEIGHT) / 2,
                           LOGO_WIDTH, LOGO_HEIGHT);
 
@@ -44,8 +43,10 @@ void showIntroView(void)
   drawTextLine("Made by Aktyn", 0, text_y, LCD_2IN4_WIDTH, GRAY, BLACK, &Font16, ALIGN_CENTER);
 
   DEV_Delay_ms(500);
-  drawImageFromBitmapFile("../assets/bluetooth_off.bmp",
-                          (LCD_2IN4_WIDTH - BLUETOOTH_ICON_WIDTH) / 2, (LCD_2IN4_HEIGHT * 3 / 2 - BLUETOOTH_ICON_HEIGHT) / 2,
+  auto bluetoothOffImagePath = pwd() + "/../assets/bluetooth_off.bmp";
+  drawImageFromBitmapFile(bluetoothOffImagePath.c_str(),
+                          (LCD_2IN4_WIDTH - BLUETOOTH_ICON_WIDTH) / 2,
+                          (LCD_2IN4_HEIGHT * 3 / 2 - BLUETOOTH_ICON_HEIGHT) / 2,
                           BLUETOOTH_ICON_WIDTH, BLUETOOTH_ICON_HEIGHT);
 
   DEV_Delay_ms(500);

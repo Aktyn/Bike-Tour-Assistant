@@ -1,19 +1,28 @@
 #include "utils.h"
 #include "Debug.h"
 
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
-#include <cstdint>
 #include <climits>
-#include <sys/stat.h> // Include this header for R_OK
 #include <cmath>
 #include <libgen.h>
 #include <fstream>
 #include <iostream>
 
 #define MKDIR_COMMAND_MAX (PATH_MAX + 6)
+
+static char executablePath[PATH_MAX + 1];
+static char executableDirectory[PATH_MAX + 1];
+
+void registerExecutablePath(const char *path) {
+  if (realpath(path, executablePath) == nullptr) {
+    fprintf(stderr, "Failed to resolve executable path.\n");
+    exit(1);
+  }
+  strncpy(executableDirectory, dirname(executablePath), PATH_MAX);
+  DEBUG("Executable path: %s\n", executablePath);
+}
 
 void extendBuffer(char **buffer, uint32_t new_size) {
   char *new_buffer = (char *) realloc(*buffer, new_size * sizeof(char));
@@ -67,19 +76,7 @@ char *executeCommand(const char *command) {
 }
 
 std::string pwd() {
-  char *pwd_output = executeCommand("pwd");
-  if (pwd_output == nullptr) {
-    printf("Error executing `pwd` command\n");
-    return "";
-  }
-
-  char directory[PATH_MAX];
-  strncpy(directory, dirname(pwd_output), PATH_MAX);
-  directory[PATH_MAX - 1] = '\0'; // Ensure null termination
-
-  free(pwd_output);
-
-  return {directory};
+  return {executableDirectory};
 }
 
 int safeCreateDirectory(const char *path) {

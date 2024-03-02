@@ -2,6 +2,7 @@
 
 #include "core/core.h"
 #include "Debug.h"
+#include "utils.h"
 
 #include <stdlib.h>
 
@@ -16,7 +17,8 @@ void startBluetoothServer(void (*onMessage)(unsigned char *data)) {
   int index;
   unsigned char buf[244], uuid[2];
 
-  if (init_blue("../devices.txt") == 0)
+  auto devicesPath = pwd() + "/../devices.txt";
+  if (init_blue(devicesPath.c_str()) == 0)
     return;
   // write 56 to Info (index 5 in devices.txt)
   // or find index from UUID

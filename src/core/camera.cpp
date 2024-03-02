@@ -67,7 +67,7 @@ void *takePhotoAsync(void *args) {
 }
 
 std::string libCameraStill(const double latitude, const double longitude) {
-  auto photos_path = pwd() + "/photos";
+  auto photos_path = pwd() + "/../photos";
 
   if (safeCreateDirectory(photos_path.c_str()) != 0) {
     printf("Error creating directory for camera photos\n");

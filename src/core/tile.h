@@ -10,6 +10,7 @@
 class Tile {
 public:
   Tile(uint32_t x, uint32_t y, uint8_t z, uint32_t dataByteLength);
+
   Tile(uint32_t x, uint32_t y, uint8_t z, std::vector<uint8_t> &imageData);
 
   ~Tile();
@@ -35,11 +36,12 @@ public:
   bool isFullyLoaded() const;
 
 private:
+  static void initializeTileCacheDirectory();
+  static std::string tilesCacheDirectory;
   uint32_t loadedByteLength;
   uint8_t *pngData;
 
   void finalize();
-
 };
 
 #endif // TILE_H

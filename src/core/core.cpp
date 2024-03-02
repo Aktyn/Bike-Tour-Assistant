@@ -20,27 +20,6 @@ Core::Core() : isBluetoothConnected(false), isRunning(false), isInactive(false),
                             0, 0}) {
   this->mapZoom = 0; // 0 means there are no tiles registered yet
   this->locationHistory.reserve(LOCATION_HISTORY_SIZE);
-
-  this->icons.directionArrowSize = loadPngFile(
-      this->icons.directionArrowImageData,
-      "../assets/direction_arrow_40x40.png", LCT_RGBA
-  );
-  this->icons.slopeIconSize = loadPngFile(
-      this->icons.slopeUphillImageData,
-      "../assets/slope_uphill.png", LCT_RGBA
-  ) = loadPngFile(
-      this->icons.slopeDownhillImageData,
-      "../assets/slope_downhill.png", LCT_RGBA
-  );
-
-  for (uint8_t i = 0; i < 10; i++) {
-    this->icons.digits40x80ImageData.emplace_back();
-    auto digitFilePath = "../assets/digits_40x80/" + std::to_string(i) + ".png";
-    loadPngFile(
-        this->icons.digits40x80ImageData[i],
-        digitFilePath.c_str(), LCT_GREY_ALPHA
-    );
-  }
 }
 
 Core::~Core() {
@@ -52,6 +31,27 @@ Core::~Core() {
 }
 
 void Core::start() {
+  this->icons.directionArrowSize = loadPngFile(
+      this->icons.directionArrowImageData,
+      pwd() + "/../assets/direction_arrow_40x40.png", LCT_RGBA
+  );
+  this->icons.slopeIconSize = loadPngFile(
+      this->icons.slopeUphillImageData,
+      pwd() + "/../assets/slope_uphill.png", LCT_RGBA
+  ) = loadPngFile(
+      this->icons.slopeDownhillImageData,
+      pwd() + "/../assets/slope_downhill.png", LCT_RGBA
+  );
+
+  for (uint8_t i = 0; i < 10; i++) {
+    this->icons.digits40x80ImageData.emplace_back();
+    auto digitFilePath = pwd() + "/../assets/digits_40x80/" + std::to_string(i) + ".png";
+    loadPngFile(
+        this->icons.digits40x80ImageData[i],
+        digitFilePath, LCT_GREY_ALPHA
+    );
+  }
+
   this->isRunning = true;
 }
 
