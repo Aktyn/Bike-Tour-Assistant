@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cmath>
 #include <tuple>
+#include <unistd.h>
 
 std::string Tile::tilesCacheDirectory;
 
@@ -88,6 +89,10 @@ Tile *Tile::loadFromCache(uint32_t x, uint32_t y, uint8_t z) {
 
   auto tileKey = Tile::getTileKey(x, y, z);
   std::string tilePath = Tile::tilesCacheDirectory + "/" + tileKey + ".png";
+
+  if (access(tilePath.c_str(), F_OK) != 0) {
+    return nullptr;
+  }
 
   std::vector<uint8_t> imageData;
   auto tileResolution = loadPngFile(imageData, tilePath, LCT_RGB);

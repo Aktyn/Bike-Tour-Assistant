@@ -6,7 +6,7 @@
 #define DANGEROUS_TEMPERATURE 90
 
 Battery::Battery() : needRedraw(true), percentage(100), temperature(0) {
-  //
+  // noop
 }
 
 
@@ -27,13 +27,20 @@ void Battery::update() {
   this->lastUpdateTime = now;
 
   try {
-    // TODO: monitor battery level and combine debug message
-    // this->needRedraw = true;
+    std::string batteryCommand = std::string("python3 ") + pwd() + "/../measure_battery.py";
+    char *battery_output = executeCommand(batteryCommand.c_str());
 
-    char *output = executeCommand("vcgencmd measure_temp"); //example output: temp=45.6'C
-    this->temperature = uint16_t(atof(output + 5));
-    DEBUG("Device temperature: %u Celsius\n", this->temperature);
-    free(output);
+    auto percentageValue = uint8_t(atoi(battery_output));
+    if (percentageValue != this->percentage) {
+      this->needRedraw = true;
+      this->percentage = percentageValue;
+    }
+    free(battery_output);
+
+    char *temperature_output = executeCommand("vcgencmd measure_temp"); //example temperature_output: temp=45.6'C
+    this->temperature = uint16_t(atof(temperature_output + 5));
+    DEBUG("Device temperature: %u Celsius; Battery percentage: %u%%\n", this->temperature, this->percentage);
+    free(temperature_output);
 
     if (this->temperature > DANGEROUS_TEMPERATURE) {
       DEBUG("Device temperature is too high!!! (%u)\n", this->temperature);

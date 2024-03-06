@@ -8,23 +8,20 @@ public:
 
   ~Camera();
 
-  void takePhoto();
-
-  void updateLocation(double latitude, double longitude);
-
-private:
-  double latitude;
-public:
   double getLatitude() const;
 
   double getLongitude() const;
 
-private:
-  double longitude;
-  double distancePerPhoto;
-public:
+  void takePhoto();
+
+  void updateLocation(double latitude, double longitude);
+
   void setDistancePerPhoto(double distancePerPhoto);
-  // distance in meters determining when to take a photo
+
+private:
+  double latitude;
+  double longitude;
+  double distancePerPhoto; // distance in meters determining when to take a photo
 };
 
 

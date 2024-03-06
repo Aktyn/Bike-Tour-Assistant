@@ -54,7 +54,7 @@ void *displayThread(void *args) {
 
       if (CORE.needSlopeRedraw) {
         CORE.needSlopeRedraw = false;
-        renderer::drawSlope(CORE.getSlope(), CORE.getIcons());
+        renderer::drawSlope(CORE.getSlope(), CORE.location.altitude, CORE.getIcons());
       }
 
       if (CORE.battery.needRedraw) {

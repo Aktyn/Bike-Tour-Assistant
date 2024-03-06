@@ -110,7 +110,7 @@ std::string libCameraStill(const double latitude, const double longitude) {
     //remove original photo files
     auto rm_command_input = std::string("rm ") + photos_path + "/*.jpg_original";
     char *rm_command_output = executeCommand(rm_command_input.c_str());
-    if(rm_command_output == nullptr) {
+    if (rm_command_output == nullptr) {
       printf("Error executing `rm` command\n");
     } else {
       free(rm_command_output);

@@ -189,12 +189,11 @@ void renderer::renderMap(
   Paint_DrawCircle(centerX, centerY, 3,
                    BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
-  // Draw outlined circle as area of uncertainty, based on GPS accuracy (TODO: add option for hiding it)
+  // Draw outlined circle as area of uncertainty, based on GPS accuracy
   //Spixel = C ∙ cos(latitude) / 2 (zoomlevel + 8); // https://wiki.openstreetmap.org/wiki/Zoom_levels
   const double C = 40075016.686;
   double metersPerPixel = (C * cos(degreesToRadians(location.latitude)) / pow(2, mapZoom)) / double(tileWidth);
   auto accuracyPixelsRadius = uint16_t(location.accuracy / metersPerPixel);
-//  DEBUG("metersPerPixel: %f; map zoom: %u, accuracy pixel radius: %u\n", metersPerPixel, mapZoom, accuracyPixelsRadius);
   uint16_t radius = std::min(accuracyPixelsRadius, uint16_t(MAP_WIDTH / 2));
   if (radius > 1) {
     Paint_DrawCircle(centerX, centerY, radius,
@@ -338,7 +337,7 @@ void renderer::drawDirectionArrow(double heading, const Icons &icons) {
   imageBuffer = nullptr;
 }
 
-void renderer::drawSlope(double slope, const Icons &icons) {
+void renderer::drawSlope(double slope, double altitude, const Icons &icons) {
   const uint16_t imageWidth = TOP_PANEL_HEIGHT;
   const uint16_t imageHeight = TOP_PANEL_HEIGHT / 2;
 
@@ -378,10 +377,15 @@ void renderer::drawSlope(double slope, const Icons &icons) {
     }
   }
 
-  std::string slopeText = std::to_string((uint16_t) round(radiansToDegrees(slope))) + "d";
+  auto slopeText = std::to_string((int16_t) round(radiansToDegrees(slope))) + "d";
   auto aligned_x = MAX(0,
                        int16_t(imageWidth) -icons.slopeIconSize.first - int16_t(Font16.Width) * slopeText.length());
-  Paint_DrawString_EN(uint16_t(aligned_x), (imageHeight - Font16.Height) / 2, slopeText.c_str(), &Font16,
+  Paint_DrawString_EN(uint16_t(aligned_x), imageHeight / 2 - Font16.Height, slopeText.c_str(), &Font16,
+                      backgroundColor, textColor);
+
+  auto altitudeText = std::to_string((int16_t) round(altitude)) + "m";
+  aligned_x = MAX(0, int16_t(imageWidth) -icons.slopeIconSize.first - int16_t(Font16.Width) * altitudeText.length());
+  Paint_DrawString_EN(uint16_t(aligned_x), (imageHeight) / 2, altitudeText.c_str(), &Font16,
                       backgroundColor, textColor);
 
   drawImageBuffer(imageBuffer, LCD_2IN4_WIDTH - imageWidth, TOP_PANEL_HEIGHT / 2, imageWidth, imageHeight);

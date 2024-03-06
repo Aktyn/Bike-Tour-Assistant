@@ -25,7 +25,7 @@ namespace renderer {
 
   void drawDirectionArrow(double heading, const Icons &icons);
 
-  void drawSlope(double slope, const Icons &icons);
+  void drawSlope(double slope, double altitude, const Icons &icons);
 }
 
 #endif //BIKETOURASSISTANT_RENDERER_H
