@@ -106,7 +106,6 @@ export class GPS extends GPSEventEmitter {
     this.emit('toggleGranted', granted)
     if (!granted) {
       console.error('GPS permission not granted')
-      //TODO: show toast with error
       return
     }
 

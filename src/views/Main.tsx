@@ -136,6 +136,7 @@ export const Main = () => {
               iconColor={theme.colors.onSurface}
               size={24}
               onPress={() => deviceSettings.set('gpxFile', null)}
+              style={{ marginLeft: 'auto' }}
             />
           </View>
         ) : (
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     rowGap: 16,
   },
   horizontalView: {
-    maxWidth: '100%',
+    alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

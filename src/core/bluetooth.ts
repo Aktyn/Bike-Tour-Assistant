@@ -1,5 +1,10 @@
 import EventEmitter from 'events'
-import { BleManager, State, type Device } from 'react-native-ble-plx'
+import {
+  BleManager,
+  State,
+  type Device,
+  type Characteristic,
+} from 'react-native-ble-plx'
 import { requestBluetoothPermission } from './common'
 import { parseMessageData, type Message, parseBase64 } from './message'
 import { Config } from '../config'
@@ -56,6 +61,7 @@ export class Bluetooth extends BluetoothEventEmitter {
   private state = State.Unknown
   private scannedDevices: Device[] = []
   private connectedDevice: Device | null = null
+  private writeableCharacteristic: Characteristic | null = null
 
   private scanning = false
   private connectingToTargetDevice = false
@@ -71,6 +77,10 @@ export class Bluetooth extends BluetoothEventEmitter {
     this.bleManager?.destroy()
     super.removeAllListeners()
     this.messagesQueue = []
+    this.writeableCharacteristic = null
+    this.connectedDevice = null
+    this.scannedDevices = []
+    this.bleManager = null
   }
 
   async init() {
@@ -189,10 +199,12 @@ export class Bluetooth extends BluetoothEventEmitter {
         .connect({ autoConnect: false })
         .then((d) => d.discoverAllServicesAndCharacteristics())
       this.connectedDevice = device
+
       const subscription = this.connectedDevice.onDisconnected(() => {
         console.info('Disconnected from target device:', device.id, device.name)
         this.scannedDevices = []
         this.connectedDevice = null
+        this.writeableCharacteristic = null
         this.sendingMessage = false
         this.messagesQueue = []
         this.emit('deviceDisconnected')
@@ -265,14 +277,49 @@ export class Bluetooth extends BluetoothEventEmitter {
     }
   }
 
+  private async getWriteableCharacteristic(connectedDevice: Device) {
+    if (!(await connectedDevice.isConnected())) {
+      this.connectedDevice = null
+      this.sendingMessage = false
+      this.messagesQueue = []
+      this.emit('deviceDisconnected')
+      throw new Error('Device not connected')
+    }
+
+    const services = await connectedDevice.services()
+    const targetService = services.at(-1)
+    if (!targetService) {
+      throw new Error('No services found')
+    }
+
+    const characteristics = await connectedDevice.characteristicsForService(
+      targetService.uuid,
+    )
+    const writeableCharacteristic = characteristics.findLast(
+      (char) => char.isWritableWithoutResponse || char.isWritableWithResponse,
+    )
+    if (!writeableCharacteristic) {
+      throw new Error('No writeable characteristics found')
+    }
+    return writeableCharacteristic
+  }
+
   getSendingMessageQueueLength() {
     return this.messagesQueue.length
   }
 
-  //TODO: handle errors, optimize loading services and characteristics
   async sendMessage(message: Message, priority = MessagePriority.NORMAL) {
     if (!this.connectedDevice) {
       throw new Error('Device not connected')
+    }
+
+    if (!this.writeableCharacteristic) {
+      this.writeableCharacteristic = await this.getWriteableCharacteristic(
+        this.connectedDevice,
+      )
+      if (!this.writeableCharacteristic) {
+        throw new Error('No writeable characteristics found')
+      }
     }
 
     if (this.sendingMessage) {
@@ -284,35 +331,12 @@ export class Bluetooth extends BluetoothEventEmitter {
 
     this.sendingMessage = true
 
-    if (!(await this.connectedDevice.isConnected())) {
-      this.connectedDevice = null
-      this.sendingMessage = false
-      this.messagesQueue = []
-      this.emit('deviceDisconnected')
-      throw new Error('Device not connected')
-    }
-
-    const services = await this.connectedDevice.services()
-    const targetService = services.at(-1)
-    if (!targetService) {
-      throw new Error('No services found')
-    }
-
-    const characteristics =
-      await this.connectedDevice.characteristicsForService(targetService.uuid)
-    const writeableCharacteristic = characteristics.findLast(
-      (char) => char.isWritableWithoutResponse || char.isWritableWithResponse,
-    )
-    if (!writeableCharacteristic) {
-      throw new Error('No writeable characteristics found')
-    }
-
     const messageData = parseMessageData(message)
 
     // await this.connectedDevice.writeCharacteristicWithoutResponseForService(
     await this.connectedDevice.writeCharacteristicWithResponseForService(
-      writeableCharacteristic.serviceUUID,
-      writeableCharacteristic.uuid,
+      this.writeableCharacteristic.serviceUUID,
+      this.writeableCharacteristic.uuid,
       messageData,
     )
 
