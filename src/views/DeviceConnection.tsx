@@ -41,12 +41,10 @@ export const DeviceConnection = () => {
     )
   }, [bluetooth])
 
-  useCoreEvent(bluetooth, 'stateChange', setIsEnabled)
-  useCoreEvent(bluetooth, 'isScanning', setIsScanning)
-  useCoreEvent(
-    bluetooth,
-    'connectingToTargetDevice',
-    setIsConnectingToTargetDevice,
+  useCoreEvent(bluetooth, 'stateChange', (v) => setIsEnabled(v as never))
+  useCoreEvent(bluetooth, 'isScanning', (v) => setIsScanning(v as never))
+  useCoreEvent(bluetooth, 'connectingToTargetDevice', (v) =>
+    setIsConnectingToTargetDevice(v as never),
   )
   useCoreEvent(bluetooth, 'deviceDiscovered', handleDeviceDiscovered)
 

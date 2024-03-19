@@ -18,7 +18,7 @@ export const darkTheme: MD3Theme = {
     onSurface: blueGrey[50],
     onSurfaceVariant: blueGrey[400],
 
-    // primaryContainer: '#f5f',
+    primaryContainer: blueGrey[800],
     // secondaryContainer: '#f5f',
     // tertiary: '#f5f',
     // tertiaryContainer: '#f5f',

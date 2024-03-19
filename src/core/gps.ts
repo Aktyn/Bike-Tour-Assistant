@@ -22,7 +22,6 @@ export type LocationState = {
   heading: number
   /** Meters per second */
   speed: number
-  // slope: number
 }
 
 declare interface GPSEventEmitter {
