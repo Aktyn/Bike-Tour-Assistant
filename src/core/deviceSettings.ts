@@ -2,6 +2,7 @@ import EventEmitter from 'events'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { DocumentPickerSuccessResult } from 'expo-document-picker'
 import { LocationAccuracy } from 'expo-location'
+import type { LocationState } from './gps'
 import { tryParseJSON } from '../utils'
 
 const defaultSettings = {
@@ -9,6 +10,7 @@ const defaultSettings = {
   /** Causes a photo to be taken every N meters */
   distancePerPhoto: 500,
   gpxFile: null as null | DocumentPickerSuccessResult,
+  pointsOfInterest: [] as Pick<LocationState, 'latitude' | 'longitude'>[],
   mapZoom: 16,
   gpsAccuracy: LocationAccuracy.BestForNavigation,
   /** Minimum time to wait between each update in milliseconds. Default value may depend on accuracy option. */

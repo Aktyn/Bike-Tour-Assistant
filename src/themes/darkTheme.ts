@@ -26,7 +26,7 @@ export const darkTheme: MD3Theme = {
     // surfaceVariant: '#f5f',
     // surfaceDisabled: '#f5f',
     // errorContainer: '#f5f',
-    // onPrimary: '#f5f',
+    onPrimary: cyan[900],
     // onPrimaryContainer: '#f5f',
     // onSecondary: '#f5f',
     // onSecondaryContainer: '#f5f',

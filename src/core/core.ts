@@ -91,6 +91,9 @@ export class Core {
         .startObservingLocation(this.deviceSettings.getSettings())
         .catch(console.error)
       void this.synchronizeTour(this.deviceSettings.get('gpxFile'))
+      void this.synchronizePointsOfInterest(
+        this.deviceSettings.get('pointsOfInterest'),
+      )
     })
 
     this.bluetooth.on('deviceDisconnected', () => {
@@ -150,6 +153,9 @@ export class Core {
       }
       if (!key || key === 'gpxFile') {
         void this.synchronizeTour(settings.gpxFile)
+      }
+      if (!key || key === 'pointsOfInterest') {
+        void this.synchronizePointsOfInterest(settings.pointsOfInterest)
       }
 
       if (
@@ -309,5 +315,12 @@ export class Core {
     } catch (error) {
       console.error('Failed to synchronize tour:', error)
     }
+  }
+
+  private async synchronizePointsOfInterest(
+    points: DeviceSettingsSchema['pointsOfInterest'],
+  ) {
+    //TODO
+    console.log('Synchronize points of interest:', points)
   }
 }

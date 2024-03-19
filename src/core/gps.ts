@@ -119,20 +119,29 @@ export class GPS extends GPSEventEmitter {
       gpsDistanceSensitivity,
     })
 
-    await Location.startLocationUpdatesAsync(Config.GPS_TASK_NAME, {
-      accuracy,
-      timeInterval: gpsTimeInterval,
-      deferredUpdatesInterval: gpsTimeInterval,
-      distanceInterval: gpsDistanceSensitivity,
-      deferredUpdatesDistance: gpsDistanceSensitivity,
+    try {
+      await Location.startLocationUpdatesAsync(Config.GPS_TASK_NAME, {
+        accuracy,
+        timeInterval: gpsTimeInterval,
+        deferredUpdatesInterval: gpsTimeInterval,
+        distanceInterval: gpsDistanceSensitivity,
+        deferredUpdatesDistance: gpsDistanceSensitivity,
 
-      showsBackgroundLocationIndicator: true,
-      foregroundService: {
-        notificationTitle: 'Bike Tour Assistant',
-        notificationBody: 'Location is tracking in background',
-        notificationColor: '#fff',
-      },
-    })
+        showsBackgroundLocationIndicator: true,
+        foregroundService: {
+          notificationTitle: 'Bike Tour Assistant',
+          notificationBody: 'Location is tracking in background',
+          notificationColor: '#fff',
+          killServiceOnDestroy: true,
+        },
+      })
+    } catch (e) {
+      console.error(
+        `Cannot start location updates: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      )
+    }
 
     if (Config.MOCK_TOUR) {
       let index = 0
@@ -184,10 +193,12 @@ export class GPS extends GPSEventEmitter {
       return false
     }
 
-    const foregroundPermission =
-      await Location.requestForegroundPermissionsAsync()
+    let foregroundPermission = await Location.getForegroundPermissionsAsync()
     if (!foregroundPermission.granted) {
-      return false
+      foregroundPermission = await Location.requestForegroundPermissionsAsync()
+      if (!foregroundPermission.granted) {
+        return false
+      }
     }
 
     const backgroundPermission = await Location.getBackgroundPermissionsAsync()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ComponentType, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import {
   BottomNavigation,
@@ -7,8 +7,11 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper'
+import type { BaseRoute } from 'react-native-paper/lib/typescript/components/BottomNavigation/BottomNavigation'
 import { GeneralOptions } from './GeneralOptions'
 import { LocationOptions } from './LocationOptions'
+import { MapLegend } from './MapLegend'
+import { PointsOfInterest } from './PointsOfInterest'
 import { useCore } from '../context/coreContext'
 import { useCoreEvent } from '../hooks/useCoreEvent'
 
@@ -22,24 +25,7 @@ export const Main = () => {
   useCoreEvent(gps, 'toggleGranted', setLocationPermissionsGranted)
 
   const [index, setIndex] = useState(0)
-  const [routes] = useState([
-    {
-      key: 'general',
-      title: 'General',
-      focusedIcon: 'cellphone-cog',
-      unfocusedIcon: 'cellphone-cog',
-    },
-    {
-      key: 'location',
-      title: 'Location options',
-      focusedIcon: 'crosshairs-gps',
-      unfocusedIcon: 'crosshairs',
-    },
-  ])
-  const renderScene = BottomNavigation.SceneMap({
-    general: GeneralOptions,
-    location: LocationOptions,
-  })
+  const renderScene = BottomNavigation.SceneMap(navigationScenes)
 
   return (
     <>
@@ -94,6 +80,7 @@ export const Main = () => {
           backgroundColor: theme.colors.primaryContainer,
           marginBottom: -8,
         }}
+        activeIndicatorStyle={{ backgroundColor: theme.colors.onPrimary }}
       />
       <Text
         variant="labelSmall"
@@ -107,6 +94,45 @@ export const Main = () => {
       </Text>
     </>
   )
+}
+
+const routes = [
+  {
+    key: 'general',
+    title: 'General',
+    focusedIcon: 'cellphone-cog',
+    unfocusedIcon: 'cellphone-cog',
+  },
+  {
+    key: 'location',
+    title: 'Location options',
+    focusedIcon: 'crosshairs-gps',
+    unfocusedIcon: 'crosshairs',
+  },
+  {
+    key: 'points-of-interest',
+    title: 'Points of interest',
+    focusedIcon: 'map-marker-multiple',
+    unfocusedIcon: 'map-marker-multiple-outline',
+  },
+  {
+    key: 'legend',
+    title: 'Map legend',
+    focusedIcon: 'map-legend',
+    unfocusedIcon: 'map-legend',
+  },
+] as const satisfies BaseRoute[]
+
+const navigationScenes = {
+  general: GeneralOptions,
+  location: LocationOptions,
+  'points-of-interest': PointsOfInterest,
+  legend: MapLegend,
+} satisfies {
+  [key in (typeof routes)[number]['key']]: ComponentType<{
+    route: BaseRoute
+    jumpTo: (key: string) => void
+  }>
 }
 
 const styles = StyleSheet.create({
