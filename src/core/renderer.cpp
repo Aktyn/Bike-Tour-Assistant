@@ -183,6 +183,30 @@ void renderer::renderMap(
     }
   }
 
+  const std::vector<Tour::PointOfInterest> &pointsOfInterest = tour.getPointsOfInterest();
+  for (const auto &point: pointsOfInterest) {
+    auto pointPosition = Tile::convertLatLongToTileXY(point.latitude, point.longitude, mapZoom);
+
+    auto endX = (pointPosition.first - locationTileX) * double(tileWidth);
+    auto endY = (pointPosition.second - locationTileY) * double(tileHeight);
+    rotateAroundPivot(endX, endY, 0, 0, -rotationRad, endX, endY);
+
+    auto centeredEndX = int16_t(centerX + endX);
+    auto centeredEndY = int16_t(centerY + endY);
+
+    if ((centeredEndX < 0) ||
+        (centeredEndY < 0) ||
+        (centeredEndX >= MAP_WIDTH) ||
+        (centeredEndY >= MAP_HEIGHT)) {
+      continue;
+    }
+
+    Paint_DrawCircle(centeredEndX, centeredEndY, 6,
+                     BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+    Paint_DrawCircle(centeredEndX, centeredEndY, 4,
+                     tourLineColor, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+  }
+
   // Draw current location dot
   Paint_DrawCircle(centerX, centerY, 6,
                    currentLocationOutlineColor, DOT_PIXEL_1X1, DRAW_FILL_FULL);

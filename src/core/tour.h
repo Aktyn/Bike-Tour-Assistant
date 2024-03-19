@@ -8,6 +8,10 @@
 
 class Tour {
 public:
+  struct PointOfInterest {
+    double latitude;
+    double longitude;
+  };
   struct Point {
     uint16_t pointIndex;
     double latitude;
@@ -40,15 +44,26 @@ public:
 
   void pushPoint(uint16_t pointIndex, double latitude, double longitude);
 
+  void resetPointsOfInterest(uint16_t pointsCount);
+
+  void pushPointOfInterest(double latitude, double longitude);
+
   bool empty() const;
 
   std::vector<ClusteredPoint> &getNearbyPoints(double latitude, double longitude, uint8_t tileRadius);
+
 private:
   uint8_t zoom;
 
   std::vector<Point> points;
   std::map<std::string, std::vector<ClusteredPoint>> pointClusters;
   PointsCache nearbyPointsCache;
+
+  std::vector<PointOfInterest> pointsOfInterest;
+public:
+  const std::vector<PointOfInterest> &getPointsOfInterest() const;
+
+private:
 
   void clusterPoint(Point point);
 };

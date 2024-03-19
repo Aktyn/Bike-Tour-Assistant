@@ -10,7 +10,6 @@
 #define MESSAGE_OUT_SIGNATURE_BYTE_1 0x25
 
 
-
 struct AwaitingMessage {
   std::vector<uint8_t> data;
   MessagePriority priority;
@@ -115,6 +114,24 @@ void handleMessage(uint8_t *data) {
       uint16_t distance = bytesToUint16(data + 1, false);
       std::cout << "Setting distance per photo: " << std::to_string(distance) << " meters" << std::endl;
       CORE.camera.setDistancePerPhoto(distance);
+    }
+      break;
+    case 12: // SEND_POINTS_OF_INTEREST_START
+    {
+      uint16_t pointsCount = bytesToUint16(data + 1, false);
+      DEBUG("Receiving points of interest data with %u points\n", pointsCount);
+      CORE.tour.resetPointsOfInterest(pointsCount);
+    }
+      break;
+    case 13: // SEND_POINTS_OF_INTEREST_DATA_CHUNK
+    {
+      uint16_t chunkSize = bytesToUint16(data + 1, false);
+      DEBUG("Receiving points of interest data chunk with %u points\n", chunkSize);
+      for (uint16_t i = 0; i < chunkSize; i++) {
+        float latitude = bytesToFloat(data + 3 + i * 8, false);
+        float longitude = bytesToFloat(data + 7 + i * 8, false);
+        CORE.tour.pushPointOfInterest(latitude, longitude);
+      }
     } break;
     default:
       std::cerr << "Unknown message: " << (uint8_t) data[0] << std::endl;

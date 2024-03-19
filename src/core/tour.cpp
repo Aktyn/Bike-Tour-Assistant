@@ -13,6 +13,7 @@ Tour::Tour() :
 
 Tour::~Tour() {
   this->clear();
+  this->pointsOfInterest.clear();
 }
 
 void Tour::setZoom(uint8_t value) {
@@ -42,25 +43,36 @@ void Tour::pushPoint(uint16_t pointIndex, double latitude, double longitude) {
   this->clusterPoint(point);
 }
 
+void Tour::resetPointsOfInterest(uint16_t pointsCount) {
+  this->pointsOfInterest.clear();
+  this->pointsOfInterest.reserve(pointsCount);
+}
+
+void Tour::pushPointOfInterest(double latitude, double longitude) {
+  PointOfInterest point = {latitude, longitude};
+  this->pointsOfInterest.push_back(point);
+}
+
 bool Tour::empty() const {
-  return this->points.empty();
+  return this->points.empty() && this->pointsOfInterest.empty();
 }
 
 void Tour::clusterPoint(Tour::Point point) {
-  if (this->zoom != 0) {
-    auto tileXY = Tile::convertLatLongToTileXY(point.latitude, point.longitude, this->zoom);
-    auto tileKey = Tile::getTileKey(uint32_t(std::get<0>(tileXY)), uint32_t(std::get<1>(tileXY)), this->zoom);
-
-    if (this->pointClusters.find(tileKey) == this->pointClusters.end()) {
-      this->pointClusters[tileKey] = std::vector<ClusteredPoint>();
-    }
-    this->pointClusters[tileKey].push_back({point.pointIndex,
-                                            point.latitude, point.longitude,
-                                            std::get<0>(tileXY), std::get<1>(tileXY)
-                                           });
-
-    this->nearbyPointsCache.tileRadius = 0; // invalidate cache
+  if (this->zoom == 0) {
+    return;
   }
+  auto tileXY = Tile::convertLatLongToTileXY(point.latitude, point.longitude, this->zoom);
+  auto tileKey = Tile::getTileKey(uint32_t(std::get<0>(tileXY)), uint32_t(std::get<1>(tileXY)), this->zoom);
+
+  if (this->pointClusters.find(tileKey) == this->pointClusters.end()) {
+    this->pointClusters[tileKey] = std::vector<ClusteredPoint>();
+  }
+  this->pointClusters[tileKey].push_back({point.pointIndex,
+                                          point.latitude, point.longitude,
+                                          std::get<0>(tileXY), std::get<1>(tileXY)
+                                         });
+
+  this->nearbyPointsCache.tileRadius = 0; // invalidate cache
 }
 
 std::vector<Tour::ClusteredPoint> &Tour::getNearbyPoints(double latitude, double longitude, uint8_t tileRadius) {
@@ -105,4 +117,6 @@ std::vector<Tour::ClusteredPoint> &Tour::getNearbyPoints(double latitude, double
   return this->nearbyPointsCache.clusteredPoints;
 }
 
-
+const std::vector<Tour::PointOfInterest> &Tour::getPointsOfInterest() const {
+  return pointsOfInterest;
+}

@@ -3,7 +3,8 @@
 #include "Debug.h"
 #include <cstdlib>
 
-#define DANGEROUS_TEMPERATURE 90
+#define DANGEROUS_TEMPERATURE 90 // Celsius
+#define BATTERY_MEASURE_INTERVAL 30000 // 30 seconds
 
 Battery::Battery() : needRedraw(true), percentage(100), temperature(0) {
   // noop
@@ -21,7 +22,7 @@ bool Battery::isOverheated() const {
 void Battery::update() {
   auto now = std::chrono::system_clock::now();
   auto delta = std::chrono::duration_cast<milliseconds>(now - this->lastUpdateTime);
-  if (delta.count() < 5000) {
+  if (delta.count() < BATTERY_MEASURE_INTERVAL) {
     return;
   }
   this->lastUpdateTime = now;
