@@ -28,7 +28,10 @@
         "FOREGROUND_SERVICE",
         "ACCESS_BACKGROUND_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
       ],
       "package": "com.bike_tour_assistant"
     },
@@ -45,6 +48,12 @@
       "react-native-ble-plx",
       "expo-font",
       "expo-document-picker"
-    ]
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5d497896-ba21-4721-acfe-f98a022086c7"
+    }
   }
 }
