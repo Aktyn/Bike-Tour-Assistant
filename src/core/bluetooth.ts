@@ -235,7 +235,7 @@ export class Bluetooth extends BluetoothEventEmitter {
 
   private async startReadingData() {
     if (!this.connectedDevice || !(await this.connectedDevice.isConnected())) {
-      throw new Error('Device not connected')
+      throw new Error('Device not connected (startReadingData)')
     }
 
     const services = await this.connectedDevice.services()
@@ -283,7 +283,7 @@ export class Bluetooth extends BluetoothEventEmitter {
       this.sendingMessage = false
       this.messagesQueue = []
       this.emit('deviceDisconnected')
-      throw new Error('Device not connected')
+      throw new Error('Device not connected (getWriteableCharacteristic)')
     }
 
     const services = await connectedDevice.services()
@@ -310,7 +310,7 @@ export class Bluetooth extends BluetoothEventEmitter {
 
   async sendMessage(message: Message, priority = MessagePriority.NORMAL) {
     if (!this.connectedDevice) {
-      throw new Error('Device not connected')
+      throw new Error('Device not connected (sendMessage)')
     }
 
     if (!this.writeableCharacteristic) {

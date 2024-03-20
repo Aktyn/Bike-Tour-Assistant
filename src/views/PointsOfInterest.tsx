@@ -1,6 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { deepOrange } from 'material-ui-colors'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { LeafletView, type MapMarker } from 'react-native-leaflet-view'
+import {
+  AnimationType,
+  LeafletView,
+  type MapShape,
+  type MapMarker,
+  type WebviewLeafletMessage,
+  MapShapeType,
+} from 'react-native-leaflet-view'
 import {
   Button,
   Divider,
@@ -12,9 +20,11 @@ import {
 } from 'react-native-paper'
 import { useCore } from '../context/coreContext'
 import type { LocationState } from '../core/gps'
+import { parseGpxFile } from '../core/gpxParser'
 import { useCoreEvent } from '../hooks/useCoreEvent'
 
 type Point = Pick<LocationState, 'latitude' | 'longitude'>
+type LatLng = { lat: number; lng: number }
 
 export const PointsOfInterest = () => {
   const theme = useTheme()
@@ -25,6 +35,13 @@ export const PointsOfInterest = () => {
     deviceSettings.get('pointsOfInterest'),
   )
   const [expandPointsList, setExpandPointsList] = useState(true)
+  const [mapCenterPosition, setMapCenterPosition] = useState<LatLng | null>(
+    null,
+  )
+  const [zoom, setZoom] = useState(15)
+  const [touchPoint, setTouchPoint] = useState<LatLng | null>(null)
+  const [gpxFile, setGpxFile] = useState(deviceSettings.get('gpxFile'))
+  const [tourShapes, setTourShapes] = useState<MapShape[]>([])
 
   const parsedPoint = parseCoordinates(coordinatesInput)
 
@@ -33,21 +50,97 @@ export const PointsOfInterest = () => {
       case 'pointsOfInterest':
         setPoints(settings.pointsOfInterest)
         break
+      case 'gpxFile':
+        setGpxFile(settings.gpxFile)
+        break
     }
   })
 
   useCoreEvent(gps, 'locationUpdate', (location) => {
-    console.log(location) //TODO: use to set initial map position
+    setMapCenterPosition(
+      (current) =>
+        current ?? {
+          lat: (location as unknown as LocationState).latitude,
+          lng: (location as unknown as LocationState).longitude,
+        },
+    )
   })
 
+  useEffect(() => {
+    if (!gpxFile) {
+      setTourShapes([])
+      return
+    }
+
+    let mounted = true
+
+    parseGpxFile(gpxFile.assets[0].uri)
+      .then((tour) => {
+        if (!mounted) {
+          return
+        }
+
+        setTourShapes([
+          {
+            color: deepOrange[400],
+            positions: tour
+              .map((point) => ({
+                lat: point.latitude,
+                lng: point.longitude,
+                index: point.index,
+              }))
+              .sort((a, b) => a.index - b.index),
+            shapeType: MapShapeType.POLYLINE,
+          },
+        ])
+      })
+      .catch(console.error)
+
+    return () => {
+      mounted = false
+    }
+  }, [gpxFile])
+
   const markers = useMemo<MapMarker[]>(() => {
-    return points.map((point) => ({
+    const markersOfInterest = points.map((point) => ({
       position: { lat: point.latitude, lng: point.longitude },
       icon: '🎯',
       size: [24, 24],
       iconAnchor: [12, 12],
     }))
-  }, [points])
+
+    return touchPoint
+      ? [
+          ...markersOfInterest,
+          {
+            position: touchPoint,
+            icon: '📌',
+            size: [24, 24],
+            iconAnchor: [0, 16],
+            animation: { type: AnimationType.WAGGLE, iterationCount: 1 },
+          },
+        ]
+      : markersOfInterest
+  }, [points, touchPoint])
+
+  const handleLeafletViewUpdate = useCallback(
+    (message: WebviewLeafletMessage) => {
+      if (
+        message.event === 'onZoomEnd' &&
+        typeof message.payload?.zoom === 'number'
+      ) {
+        setZoom(message.payload?.zoom)
+      }
+
+      if (message.event === 'onMapClicked' && message.payload?.touchLatLng) {
+        setTouchPoint(message.payload.touchLatLng)
+        setCoordinatesInput(
+          `${message.payload.touchLatLng.lat}, ${message.payload.touchLatLng.lng}`,
+        )
+      }
+    },
+    [],
+  )
 
   return (
     <View style={styles.container}>
@@ -66,7 +159,10 @@ export const PointsOfInterest = () => {
           value={coordinatesInput}
           left={<TextInput.Icon icon="crosshairs-gps" />}
           keyboardType="numeric"
-          onChangeText={setCoordinatesInput}
+          onChangeText={(text) => {
+            setCoordinatesInput(text)
+            setTouchPoint(null)
+          }}
         />
         <Button
           dark
@@ -84,16 +180,17 @@ export const PointsOfInterest = () => {
             ) {
               deviceSettings.set('pointsOfInterest', [...points, parsedPoint])
               setCoordinatesInput('')
+              setTouchPoint(null)
             }
           }}
         >
           Add point
         </Button>
       </View>
-      <ScrollView style={{ maxHeight: '50%', flexGrow: 0, marginTop: 16 }}>
+      <ScrollView style={{ maxHeight: 256, flexGrow: 0, marginTop: 16 }}>
         {points.length > 0 ? (
           <List.Accordion
-            title="Points"
+            title={`Points (${points.length})`}
             expanded={expandPointsList}
             onPress={() => setExpandPointsList(!expandPointsList)}
             // eslint-disable-next-line react/no-unstable-nested-components
@@ -134,10 +231,10 @@ export const PointsOfInterest = () => {
           doDebug={false}
           androidHardwareAccelerationDisabled={false}
           mapMarkers={markers}
-          // mapShapes={tourShapes}
-          // mapCenterPosition={latLng} //TODO: use first location update
-          // zoom={zoom}
-          // onMessageReceived={handleLeafletViewUpdate}
+          mapShapes={tourShapes}
+          mapCenterPosition={mapCenterPosition}
+          zoom={zoom}
+          onMessageReceived={handleLeafletViewUpdate}
         />
       </View>
     </View>

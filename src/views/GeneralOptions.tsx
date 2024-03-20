@@ -153,6 +153,8 @@ export const GeneralOptions = () => {
         value={mapZoom}
         onValueChange={(value) => deviceSettings.set('mapZoom', value)}
       />
+
+      <Divider />
       <Button
         dark
         mode="contained"

@@ -16,6 +16,8 @@ export enum MessageType {
   SEND_TOUR_DATA_CHUNK,
   CONFIRM_RECEIVED_MESSAGE,
   SET_DISTANCE_PER_PHOTO,
+  SEND_POINTS_OF_INTEREST_START,
+  SEND_POINTS_OF_INTEREST_DATA_CHUNK,
 }
 
 export enum IncommingMessageType {
@@ -52,6 +54,14 @@ export type Message =
   | MessageBase<MessageType.SEND_TOUR_DATA_CHUNK, TourPoint[]>
   | MessageBase<MessageType.CONFIRM_RECEIVED_MESSAGE, null>
   | MessageBase<MessageType.SET_DISTANCE_PER_PHOTO, { distance: number }>
+  | MessageBase<
+      MessageType.SEND_POINTS_OF_INTEREST_START,
+      { pointsCount: number }
+    >
+  | MessageBase<
+      MessageType.SEND_POINTS_OF_INTEREST_DATA_CHUNK,
+      Pick<LocationState, 'latitude' | 'longitude'>[]
+    >
 
 /** Returns base64 representation of buffer (224 bytes limit) */
 export function parseMessageData(message: Message) {
@@ -132,6 +142,23 @@ export function parseMessageData(message: Message) {
     case MessageType.SET_DISTANCE_PER_PHOTO:
       buffer = Buffer.alloc(3)
       buffer.writeUInt16LE(Math.floor(message.data.distance), 1)
+      break
+    case MessageType.SEND_POINTS_OF_INTEREST_START:
+      buffer = Buffer.alloc(3)
+      buffer.writeUint16LE(message.data.pointsCount, 1)
+      break
+    case MessageType.SEND_POINTS_OF_INTEREST_DATA_CHUNK:
+      {
+        const chunkSize = message.data.length
+        buffer = Buffer.alloc(3 + chunkSize * 8)
+        buffer.writeUint16LE(chunkSize, 1)
+
+        for (let i = 0; i < message.data.length; i++) {
+          const point = message.data[i]
+          buffer.writeFloatLE(point.latitude, 3 + i * 8)
+          buffer.writeFloatLE(point.longitude, 7 + i * 8)
+        }
+      }
       break
   }
 

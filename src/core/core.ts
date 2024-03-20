@@ -2,7 +2,7 @@ import BackgroundTimer, { type TimeoutId } from 'react-native-background-timer'
 import { Bluetooth, MessagePriority } from './bluetooth'
 import { DeviceSettings, type DeviceSettingsSchema } from './deviceSettings'
 import { GPS, type LocationState } from './gps'
-import { parseGpxFile } from './gpxParser'
+import { parseGpxFile, type TourPoint } from './gpxParser'
 import { MapProvider, type Tile } from './mapProvider'
 import { IncommingMessageType, MessageType } from './message'
 import { Config } from '../config'
@@ -294,7 +294,7 @@ export class Core {
       const tourDataChunkSize = 22
 
       for (let i = 0; i < tour.length; i += tourDataChunkSize) {
-        const data = []
+        const data: TourPoint[] = []
 
         for (let j = 0; j < tourDataChunkSize; j++) {
           const point = tour[i + j]
@@ -320,7 +320,38 @@ export class Core {
   private async synchronizePointsOfInterest(
     points: DeviceSettingsSchema['pointsOfInterest'],
   ) {
-    //TODO
-    console.log('Synchronize points of interest:', points)
+    try {
+      await this.bluetooth.sendMessage(
+        {
+          type: MessageType.SEND_POINTS_OF_INTEREST_START,
+          data: { pointsCount: points.length },
+        },
+        MessagePriority.HIGH,
+      )
+
+      const tourDataChunkSize = 26
+
+      for (let i = 0; i < points.length; i += tourDataChunkSize) {
+        const data: Pick<LocationState, 'latitude' | 'longitude'>[] = []
+
+        for (let j = 0; j < tourDataChunkSize; j++) {
+          const point = points[i + j]
+          if (!point) {
+            break
+          }
+          data.push(point)
+        }
+
+        await this.bluetooth.sendMessage(
+          {
+            type: MessageType.SEND_POINTS_OF_INTEREST_DATA_CHUNK,
+            data,
+          },
+          MessagePriority.HIGH,
+        )
+      }
+    } catch (error) {
+      console.error('Failed to synchronize points of interest:', error)
+    }
   }
 }
