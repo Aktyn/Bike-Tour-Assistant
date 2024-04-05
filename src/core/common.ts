@@ -40,6 +40,7 @@ export async function requestBluetoothPermission() {
 
       for (const permission of permissionsList) {
         if (await PermissionsAndroid.check(permission)) {
+          console.info('Permission already granted', permission)
           continue
         }
         const status = await PermissionsAndroid.request(permission)

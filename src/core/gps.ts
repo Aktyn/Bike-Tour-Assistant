@@ -108,9 +108,17 @@ export class GPS extends GPSEventEmitter {
       return
     }
 
-    if (await Location.hasStartedLocationUpdatesAsync(Config.GPS_TASK_NAME)) {
-      console.info('Task already registered, stopping and restarting')
-      await Location.stopLocationUpdatesAsync(Config.GPS_TASK_NAME)
+    try {
+      if (await Location.hasStartedLocationUpdatesAsync(Config.GPS_TASK_NAME)) {
+        console.info('Task already registered, stopping and restarting')
+        await Location.stopLocationUpdatesAsync(Config.GPS_TASK_NAME)
+      }
+    } catch (e) {
+      console.error(
+        `Cannot check if task is already registered: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      )
     }
 
     console.info('Starting location updates with options:', {

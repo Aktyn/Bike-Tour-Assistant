@@ -26,6 +26,7 @@
       },
       "permissions": [
         "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -47,7 +48,14 @@
     "plugins": [
       "react-native-ble-plx",
       "expo-font",
-      "expo-document-picker"
+      "expo-document-picker",
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "appVersion"

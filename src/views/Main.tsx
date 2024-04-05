@@ -14,6 +14,7 @@ import { MapLegend } from './MapLegend'
 import { PointsOfInterest } from './PointsOfInterest'
 import { useCore } from '../context/coreContext'
 import { useCoreEvent } from '../hooks/useCoreEvent'
+import { usePreservedState } from '../hooks/usePreservedState'
 
 export const Main = () => {
   const theme = useTheme()
@@ -24,7 +25,7 @@ export const Main = () => {
 
   useCoreEvent(gps, 'toggleGranted', setLocationPermissionsGranted)
 
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = usePreservedState('viewIndex', 0)
   const renderScene = BottomNavigation.SceneMap(navigationScenes)
 
   return (
@@ -78,7 +79,7 @@ export const Main = () => {
         sceneAnimationType="shifting"
         barStyle={{
           backgroundColor: theme.colors.primaryContainer,
-          marginBottom: -8,
+          marginBottom: -4,
         }}
         activeIndicatorStyle={{ backgroundColor: theme.colors.onPrimary }}
       />
@@ -142,7 +143,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     fontWeight: 'bold',
-    padding: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     textAlign: 'center',
   },
   footer: {
