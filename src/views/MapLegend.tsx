@@ -1,13 +1,14 @@
 import { useAssets } from 'expo-asset'
 import { Dimensions, Image, ScrollView } from 'react-native'
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+const legend1 = require('../img/cyclosm-legend-1.png')
+const legend2 = require('../img/cyclosm-legend-2.png')
+const legend3 = require('../img/cyclosm-legend-3.png')
+const legend4 = require('../img/cyclosm-legend-4.png')
+
 export const MapLegend = () => {
-  const [assets] = useAssets([
-    require('../img/cyclosm-legend-1.png'),
-    require('../img/cyclosm-legend-2.png'),
-    require('../img/cyclosm-legend-3.png'),
-    require('../img/cyclosm-legend-4.png'),
-  ])
+  const [assets] = useAssets([legend1, legend2, legend3, legend4])
 
   if (!assets?.length) {
     return null

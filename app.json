@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bike Tour Assistant",
     "slug": "bike-tour-assistant",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -12,7 +12,8 @@
       "backgroundColor": "#455a64"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "**/*",
+      "src/img/*"
     ],
     "ios": {
       "usesIcloudStorage": true,
