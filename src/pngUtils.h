@@ -6,7 +6,7 @@
 #include <vector>
 #include "lodepng/lodepng.h"
 
-std::pair<uint16_t, uint16_t> parsePngData(std::vector<uint8_t> &outData, uint8_t *pngData, uint32_t pngDataLength);
+std::pair<uint16_t, uint16_t> parsePngData(std::vector<uint8_t> &outData, const uint8_t *pngData, uint32_t pngDataLength);
 
 std::pair<uint16_t, uint16_t> loadPngFile(std::vector<uint8_t> &outData, const std::string &filename,
                                           LodePNGColorType colorType = LCT_RGB);

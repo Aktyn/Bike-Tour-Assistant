@@ -24,8 +24,8 @@ void registerExecutablePath(const char *path) {
   DEBUG("Executable path: %s\n", executablePath);
 }
 
-void extendBuffer(char **buffer, uint32_t new_size) {
-  char *new_buffer = (char *) realloc(*buffer, new_size * sizeof(char));
+void extendBuffer(char **buffer, const uint32_t new_size) {
+  const auto new_buffer = static_cast<char *>(realloc(*buffer, new_size * sizeof(char)));
   if (new_buffer == nullptr) {
     fprintf(stderr, "Failed to reallocate memory.\n");
     free(*buffer);
@@ -43,7 +43,7 @@ char *executeCommand(const char *command) {
     return nullptr;
   }
 
-  char *cmd_output = (char *) malloc(0 * sizeof(char));
+  char *cmd_output = static_cast<char *>(malloc(0 * sizeof(char)));
   uint32_t cmd_output_size = 0;
 
   char buffer[128];
@@ -51,7 +51,7 @@ char *executeCommand(const char *command) {
     if (cmd_output_size == 0) {
       cmd_output_size += strlen(buffer) + 1;
       free(cmd_output);
-      cmd_output = (char *) malloc(cmd_output_size * sizeof(char));
+      cmd_output = static_cast<char *>(malloc(cmd_output_size * sizeof(char)));
       if (cmd_output == nullptr) {
         fprintf(stderr, "Failed to allocate memory.\n");
         return nullptr;
@@ -66,7 +66,7 @@ char *executeCommand(const char *command) {
     }
   }
 
-  int exit_status = pclose(pipe);
+  const int exit_status = pclose(pipe);
   if (WEXITSTATUS(exit_status) != 0) {
     fprintf(stderr, "Command exited with status: %d\n", WEXITSTATUS(exit_status));
     return nullptr;
@@ -103,7 +103,7 @@ void safeDeleteFile(const char *path) {
   if (access(path, F_OK) == 0) {
     DEBUG("Deleting file: %s\n", path);
 
-    std::string rm_command = "rm " + std::string(path);
+    const std::string rm_command = "rm " + std::string(path);
     char *rm_output = executeCommand(rm_command.c_str());
     if (rm_output == nullptr) {
       printf("Error deleting file: %s\n", path);
@@ -130,31 +130,31 @@ void createOrReplaceFileFromBinaryData(const std::string &filePath, const uint8_
   file.close();
 }
 
-uint16_t rgbToRgb666(uint8_t red, uint8_t green, uint8_t blue) {
-  uint16_t red_666 = (red >> 2) & 0x3F;
-  uint16_t green_666 = ((red & 0x03) << 4) | ((green >> 2) & 0x3F);
-  uint16_t blue_666 = (blue >> 3) & 0x1F;
+uint16_t rgbToRgb666(const uint8_t red, const uint8_t green, const uint8_t blue) {
+  const uint16_t red_666 = (red >> 2) & 0x3F;
+  const uint16_t green_666 = ((red & 0x03) << 4) | ((green >> 2) & 0x3F);
+  const uint16_t blue_666 = (blue >> 3) & 0x1F;
 
   return (red_666 << 12) | (green_666 << 6) | blue_666;
 }
 
-uint16_t rgbToRgb565(uint8_t red, uint8_t green, uint8_t blue) {
-  uint16_t r = (blue >> 3) & 0x1F;
-  uint16_t g = ((blue & 0x07) << 5) | ((red >> 3) & 0x3F);
-  uint16_t b = (green >> 3) & 0x1F;
+uint16_t rgbToRgb565(const uint8_t red, const uint8_t green, const uint8_t blue) {
+  const uint16_t r = (blue >> 3) & 0x1F;
+  const uint16_t g = ((blue & 0x07) << 5) | ((red >> 3) & 0x3F);
+  const uint16_t b = (green >> 3) & 0x1F;
 
   return (r << 11) | (g << 5) | b;
 }
 
-uint16_t rgbToRgb444(uint8_t red, uint8_t green, uint8_t blue) {
-  uint16_t red_444 = (red >> 4) & 0x0F;
-  uint16_t green_444 = (green >> 4) & 0x0F;
-  uint16_t blue_444 = (blue >> 4) & 0x0F;
+uint16_t rgbToRgb444(const uint8_t red, const uint8_t green, const uint8_t blue) {
+  const uint16_t red_444 = (red >> 4) & 0x0F;
+  const uint16_t green_444 = (green >> 4) & 0x0F;
+  const uint16_t blue_444 = (blue >> 4) & 0x0F;
 
   return (red_444 << 8) | (green_444 << 4) | blue_444;
 }
 
-uint16_t convertRgbColor(uint16_t color) {
+uint16_t convertRgbColor(const uint16_t color) {
   return ((color << 8) & 0xff00) | (color >> 8);
 }
 
@@ -172,9 +172,9 @@ uint16_t findNextPowerOf2(uint16_t n) {
   return 1 << count;
 }
 
-float bytesToFloat(const uint8_t *bytes, bool big_endian) {
+float bytesToFloat(const uint8_t *bytes, const bool big_endian) {
   float f;
-  auto *f_ptr = (uint8_t *) &f;
+  auto *f_ptr = reinterpret_cast<uint8_t *>(&f);
   if (big_endian) {
     f_ptr[3] = bytes[0];
     f_ptr[2] = bytes[1];
@@ -189,9 +189,9 @@ float bytesToFloat(const uint8_t *bytes, bool big_endian) {
   return f;
 }
 
-double bytesToDouble(const uint8_t *bytes, bool big_endian) {
+double bytesToDouble(const uint8_t *bytes, const bool big_endian) {
   double d;
-  auto *d_ptr = (uint8_t *) &d;
+  auto *d_ptr = reinterpret_cast<uint8_t *>(&d);
   if (big_endian) {
     d_ptr[7] = bytes[0];
     d_ptr[6] = bytes[1];
@@ -214,9 +214,9 @@ double bytesToDouble(const uint8_t *bytes, bool big_endian) {
   return d;
 }
 
-uint16_t bytesToUint16(const uint8_t *bytes, bool big_endian) {
+uint16_t bytesToUint16(const uint8_t *bytes, const bool big_endian) {
   uint16_t i;
-  auto *i_ptr = (uint8_t *) &i;
+  auto *i_ptr = reinterpret_cast<uint8_t *>(&i);
   if (big_endian) {
     i_ptr[1] = bytes[0];
     i_ptr[0] = bytes[1];
@@ -227,9 +227,9 @@ uint16_t bytesToUint16(const uint8_t *bytes, bool big_endian) {
   return i;
 }
 
-uint32_t bytesToUint32(const uint8_t *bytes, bool big_endian) {
+uint32_t bytesToUint32(const uint8_t *bytes, const bool big_endian) {
   uint32_t i;
-  auto *i_ptr = (uint8_t *) &i;
+  auto *i_ptr = reinterpret_cast<uint8_t *>(&i);
   if (big_endian) {
     i_ptr[3] = bytes[0];
     i_ptr[2] = bytes[1];
@@ -244,9 +244,9 @@ uint32_t bytesToUint32(const uint8_t *bytes, bool big_endian) {
   return i;
 }
 
-uint64_t bytesToUint64(const uint8_t *bytes, bool big_endian) {
+uint64_t bytesToUint64(const uint8_t *bytes, const bool big_endian) {
   uint64_t i;
-  auto *i_ptr = (uint8_t *) &i;
+  auto *i_ptr = reinterpret_cast<uint8_t *>(&i);
   if (big_endian) {
     i_ptr[7] = bytes[0];
     i_ptr[6] = bytes[1];
@@ -269,8 +269,8 @@ uint64_t bytesToUint64(const uint8_t *bytes, bool big_endian) {
   return i;
 }
 
-void uint32ToBytes(uint32_t value, uint8_t *bytes, bool big_endian) {
-  auto *value_ptr = (uint8_t *) &value;
+void uint32ToBytes(uint32_t value, uint8_t *bytes, const bool big_endian) {
+  const auto *value_ptr = reinterpret_cast<uint8_t *>(&value);
   if (big_endian) {
     bytes[0] = value_ptr[3];
     bytes[1] = value_ptr[2];
@@ -284,12 +284,12 @@ void uint32ToBytes(uint32_t value, uint8_t *bytes, bool big_endian) {
   }
 }
 
-double metersPerSecondToKmPerHour(double metersPerSecond) {
+double metersPerSecondToKmPerHour(const double metersPerSecond) {
   return metersPerSecond * 3.6;
 }
 
-double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double lon2) {
-  const double R = 6371e3; // metres
+double distanceBetweenCoordinates(const double lat1, const double lon1, const double lat2, const double lon2) {
+  constexpr double R = 6371e3; // metres
   const double phi1 = degreesToRadians(lat1); // φ, λ in radians
   const double phi2 = degreesToRadians(lat2);
   const double deltaPhi = degreesToRadians(lat2 - lat1);
@@ -303,16 +303,16 @@ double distanceBetweenCoordinates(double lat1, double lon1, double lat2, double 
   return R * c; // in metres
 }
 
-double degreesToRadians(double degrees) {
+double degreesToRadians(const double degrees) {
   return (degrees * M_PI) / 180.0;
 }
 
-double radiansToDegrees(double radians) {
+double radiansToDegrees(const double radians) {
   return (radians * 180.0) / M_PI;
 
 }
 
-double mix(double a, double b, double mix) {
+double mix(const double a, const double b, const double mix) {
   return a * (1.0 - mix) + b * mix;
 }
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.5.0)
 project(BikeTourAssistant VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -59,7 +59,9 @@ add_executable(BikeTourAssistant ${C_SOURCES} ${CXX_SOURCES})
 target_include_directories(BikeTourAssistant PUBLIC ${C_INCLUDE_DIRECTORIES})
 
 target_compile_definitions(BikeTourAssistant PUBLIC USE_DEV_LIB)
-#target_compile_definitions(BikeTourAssistant PUBLIC USE_DEBUG) # Remove for production compilation
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    target_compile_definitions(BikeTourAssistant PUBLIC USE_DEBUG) # Remove for production compilation
+endif ()
 
 target_link_libraries(BikeTourAssistant bluetooth)
 target_link_libraries(BikeTourAssistant lgpio)

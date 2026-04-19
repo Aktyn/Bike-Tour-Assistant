@@ -9,8 +9,8 @@
  * | Info        :   Basic version
  *
  ******************************************************************************/
-#ifndef __DEBUG_H
-#define __DEBUG_H
+#ifndef DEBUG_H
+#define DEBUG_H
 
 #include <stdio.h>
 
@@ -30,4 +30,4 @@ inline void ASSERT(unsigned condition, const char *message) {
 }
 #endif
 
-#endif //__DEBUG_H
+#endif //DEBUG_H

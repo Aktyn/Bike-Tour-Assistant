@@ -14,13 +14,12 @@
 void *bluetoothThread(void (*onMessage)(unsigned char *data)) {
   startBluetoothServer(onMessage);
   pthread_exit(nullptr);
-  return nullptr;
 }
 
-void *displayThread(void *args) {
+void *displayThread(void *_) {
   while (CORE.isRunning) {
     if (!CORE.isBluetoothConnected) {
-      showIntroView(); // This function includes while loop breaking on bluetooth connection
+      showIntroView(); // This function includes while loop-breaking on bluetooth connection
     }
 
     resetOutMessagesQueue();
@@ -38,8 +37,8 @@ void *displayThread(void *args) {
         CORE.drawMap();
 
         auto endTime = std::chrono::high_resolution_clock::now();
-        auto executionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        DEBUG("Map render took %lld milliseconds\n", executionDuration.count());
+        const auto executionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        DEBUG("Map render took %ld milliseconds\n", executionDuration.count());
       }
 
       if (CORE.needSpeedRedraw) {
@@ -73,7 +72,7 @@ void terminate(int signo) {
   Handler_2IN4_LCD(signo);
 }
 
-int main(int argc, char *argv[]) {
+int main(int _, char *argv[]) {
   registerExecutablePath(argv[0]);
 
 #if USE_DEV_LIB
@@ -96,7 +95,7 @@ int main(int argc, char *argv[]) {
 
   pthread_create(&display_thread_id, nullptr, displayThread, nullptr);
   pthread_create(&bluetooth_thread_id, nullptr,
-                 (void *(*)(void *)) bluetoothThread, (void *) handleMessage);
+                 reinterpret_cast<void *(*)(void *)>(bluetoothThread), reinterpret_cast<void *>(handleMessage));
 
   pthread_join(bluetooth_thread_id, nullptr);
   pthread_cancel(display_thread_id);
