@@ -1,4 +1,4 @@
-DEVICE=BikeTourAssistant  TYPE=MESH  NODE=1  ADDRESS=B8:27:EB:57:CC:EE
+DEVICE=BikeTourAssistant  TYPE=MESH  NODE=1  ADDRESS=B8:27:EB:0B:EA:45
   ; LE characteristics when acting as an LE server
   ; Specify UUIDs and let system allocate handles  
   PRIMARY_SERVICE = 1800

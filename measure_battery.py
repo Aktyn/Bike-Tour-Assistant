@@ -191,8 +191,12 @@ class INA219:
 if __name__=='__main__':
 
     # Create an INA219 instance.
-    ina219 = INA219(addr=0x43)
-    bus_voltage = ina219.getBusVoltage_V()             # voltage on V- (load side)
+    try:
+        ina219 = INA219(addr=0x43)
+        bus_voltage = ina219.getBusVoltage_V()             # voltage on V- (load side)
+    except Exception:
+        bus_voltage = -1
+
     # shunt_voltage = ina219.getShuntVoltage_mV() / 1000 # voltage between V+ and V- across the shunt
     # current = ina219.getCurrent_mA()                   # current in mA
     # power = ina219.getPower_W()                        # power in W
